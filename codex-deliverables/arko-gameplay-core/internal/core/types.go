@@ -42,6 +42,7 @@ const (
 	CodeItemNotFound          ErrorCode = "item_not_found"
 	CodeInsufficientItems     ErrorCode = "insufficient_items"
 	CodeIdempotencyConflict   ErrorCode = "idempotency_conflict"
+	CodeDemoRecipeDisabled    ErrorCode = "demo_recipe_disabled"
 )
 
 type ItemKind string
@@ -159,5 +160,5 @@ type TransferRequest struct {
 }
 
 type RequirementChecker interface {
-	Check(ctx context.Context, actor Actor, characterID CharacterID, requirements []RecipeRequirement) error
+	Check(ctx context.Context, actor Actor, characterID CharacterID, requirements []RecipeRequirement) (bool, error)
 }

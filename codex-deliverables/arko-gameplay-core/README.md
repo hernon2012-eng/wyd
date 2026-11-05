@@ -4,7 +4,7 @@ Fundação independente em Go para inventário e fabricação, sem integração 
 
 ## Estado
 
-Arquitetura e contratos iniciais estão documentados; o motor Go ainda não foi implementado. O armazenamento de referência planejado será apenas para execução e testes, não persistência de produção. Nenhum banco é acessado ou migrado.
+Motor Go de referência implementado: inventário por personagem, slots/pilhas, add/remove/transfer, planejamento de crafting, operações idempotentes e transação atômica no repositório em memória. O repositório serializa todas as transações e serve apenas para execução/testes; não é persistência de produção. Nenhum banco é acessado ou migrado.
 
 ## Estrutura
 
@@ -14,6 +14,6 @@ Arquitetura e contratos iniciais estão documentados; o motor Go ainda não foi 
 
 ## Verificação
 
-Na pasta do módulo, execute `gofmt -w .`, `go test ./...`, `go test -race ./...`, `go vet ./...` e `go build ./...`.
+Na pasta do módulo, execute `gofmt -w $(find . -name '*.go')`, `go test ./...`, `go test -race ./...`, `go vet ./...` e `go build ./...`.
 
 Consulte `LIMITATIONS.md` antes de considerar qualquer backend pronto para uso real.

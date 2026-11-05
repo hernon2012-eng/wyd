@@ -18,3 +18,12 @@
 - Testes cobrindo rollback local de add/transfer, ordem de consumo, slots liberados, agregação de ingredientes e fuzz de conservação em add.
 - Validação executada: `gofmt -w internal/core && go test ./...` passou.
 - Limite desta etapa: ainda não há serviço de crafting, repositório transacional ou idempotência.
+
+## 2026-11-05 — Serviço transacional e idempotência
+
+- C1 publicado: `8e56c6d` (`feat: add inventory planning primitives`) em `origin/codex/arko-gameplay-core`.
+- Implementados contrato `Repository/Transaction`, `MemoryStore` copy-on-write serializado, escopo idempotente `(personagem, operação, chave)`, capacidade fail-closed e failpoints em gravação de inventário/operação/commit.
+- Implementados crafting/add/remove/transfer com autorização via `Actor`, fingerprint sem request ID, replay de resultado terminal e rejeições determinísticas persistidas. Sucesso só retorna após commit.
+- Testes cobrindo os 17 casos da matriz, incluindo concorrência, retry após resposta perdida, recuperação de storage failure e rollback por failpoint.
+- Validação executada: `gofmt -w internal/core`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...` e `gofmt -l` passaram.
+- Limite desta etapa: `MemoryStore` é globalmente serializado e volátil; a interface não comprova implementação durável nem multi-processo.
