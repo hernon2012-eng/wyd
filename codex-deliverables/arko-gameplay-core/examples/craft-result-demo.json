@@ -1,0 +1,14 @@
+{
+  "notice": "DEMONSTRAÇÃO — resposta fictícia, não resultado de servidor WYD.",
+  "result": {
+    "operation_id": "operation_demo_001",
+    "request_id": "req_demo_001",
+    "status": "completed",
+    "consumed": [
+      {"item_id": "demo:fiber", "quantity": 2},
+      {"item_id": "demo:resin", "quantity": 1}
+    ],
+    "produced": [{"item_id": "demo:widget", "quantity": 1}],
+    "replayed": false
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/arko-gameplay-core/v1/recipe.schema.json",
+  "title": "ARKO Recipe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["recipe_id", "version", "name", "materials", "product", "active", "demo_only"],
+  "properties": {
+    "recipe_id": {"$ref": "#/$defs/identifier"},
+    "version": {"type": "integer", "minimum": 1},
+    "name": {"type": "string", "minLength": 1, "maxLength": 128},
+    "materials": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"$ref": "#/$defs/itemAmount"}},
+    "product": {"$ref": "#/$defs/itemAmount"},
+    "requirements": {"type": "array", "maxItems": 64, "items": {"type": "object", "additionalProperties": false, "required": ["key", "value"], "properties": {"key": {"$ref": "#/$defs/identifier"}, "value": {"type": "string", "maxLength": 256}}}},
+    "active": {"type": "boolean"},
+    "demo_only": {"type": "boolean"}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$"},
+    "itemAmount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "quantity"],
+      "properties": {
+        "item_id": {"$ref": "#/$defs/identifier"},
+        "quantity": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

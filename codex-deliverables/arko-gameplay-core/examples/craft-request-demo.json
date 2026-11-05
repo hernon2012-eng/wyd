@@ -1,0 +1,11 @@
+{
+  "notice": "DEMONSTRAÇÃO — solicitação sintética; character_id não é conta/personagem real.",
+  "request": {
+    "request_id": "req_demo_001",
+    "idempotency_key": "demo_craft_001",
+    "character_id": "character_demo",
+    "recipe_id": "demo:widget_v1",
+    "recipe_version": 1,
+    "quantity": 1
+  }
+}

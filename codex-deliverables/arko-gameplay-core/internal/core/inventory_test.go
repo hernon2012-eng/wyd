@@ -26,6 +26,14 @@ func TestAddItemsIsAtomicWhenInventoryFull(t *testing.T) {
 	}
 }
 
+func TestFreeSlotsCountsEmptySlots(t *testing.T) {
+	inventory := Inventory{CharacterID: "char_demo", Slots: []Slot{{ItemID: "demo:fiber", Quantity: 1}, {}, {}}}
+	free, err := FreeSlots(inventory)
+	if err != nil || free != 2 {
+		t.Fatalf("FreeSlots() = %d, %v; want 2, nil", free, err)
+	}
+}
+
 func TestRemoveItemsConsumesSlotsInOrder(t *testing.T) {
 	inventory := Inventory{CharacterID: "char_demo", Slots: []Slot{{ItemID: "demo:fiber", Quantity: 2}, {ItemID: "demo:fiber", Quantity: 5}}}
 	if err := RemoveItems(&inventory, "demo:fiber", 4); err != nil {

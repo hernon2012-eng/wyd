@@ -9,11 +9,13 @@ Motor Go de referência implementado: inventário por personagem, slots/pilhas, 
 ## Estrutura
 
 - `go.mod`, `cmd/`, `internal/`: módulo Go e motor independente.
+- `schemas/v1/`: contratos JSON de receita, inventário, solicitação e resultado.
 - `examples/`: dados sintéticos marcados como demonstração.
+- `tests/`: validação Draft 2020-12 para schemas/exemplos.
 - `README.md`, `WORKLOG.md`, `CHECKPOINTS.md`, `ARCHITECTURE.md`, `API_CONTRACT.md`, `SECURITY.md`, `TEST_MATRIX.md`, `LIMITATIONS.md`, `HANDOFF_CLAUDE_CODE.md`: operação, contratos e integração futura.
 
 ## Verificação
 
-Na pasta do módulo, execute `gofmt -w $(find . -name '*.go')`, `go test ./...`, `go test -race ./...`, `go vet ./...` e `go build ./...`.
+Na pasta do módulo, execute `gofmt -w $(find . -name '*.go')`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...` e `python tests/validate_contracts.py` (instale `tests/requirements.txt` para a última verificação).
 
 Consulte `LIMITATIONS.md` antes de considerar qualquer backend pronto para uso real.

@@ -2,6 +2,8 @@
 
 Contrato lógico v1 independente de transporte. Ainda não define endpoint HTTP, WebSocket ou integração com `arko-gateway`.
 
+Os schemas correspondentes estão em `schemas/v1/`: `craft-request.schema.json`, `craft-result.schema.json`, `recipe.schema.json` e `inventory.schema.json`. Os exemplos no diretório `examples/` são fixtures DEMONSTRAÇÃO e não definem dados ou regras de produção.
+
 ## Solicitação
 
 Uma intenção de fabricação contém `request_id`, `idempotency_key`, `character_id`, `recipe_id`, `recipe_version` e `quantity` (número de lotes, positivo e limitado). Materiais e saída escalam linearmente por lotes com checagem de overflow. A identidade autenticada deve vir do contexto autoritativo do servidor e ser autorizada para `character_id`; não confie nessa identidade enviada pelo cliente. Requisitos são avaliados contra estado autoritativo, não contra declarações do cliente.
@@ -20,4 +22,4 @@ Receitas são resolvidas pela chave e versão imutável exatas. Não encontrar a
 
 ## Inventário
 
-Comandos de adicionar, remover e transferir também exigem identidade da operação e validação no servidor. O servidor aplica limites de stack/slot e só responde sucesso após confirmação da transação. Não há contrato de wire format ou IDs oficiais nesta versão.
+Comandos de adicionar, remover e transferir também exigem identidade da operação e validação no servidor. O servidor aplica limites de stack/slot e só responde sucesso após confirmação da transação. `Actor` é um objeto confiável fornecido pelo adaptador de autenticação do servidor; nunca deve ser desserializado diretamente de uma mensagem cliente. Não há endpoint de rede ou IDs oficiais nesta versão.

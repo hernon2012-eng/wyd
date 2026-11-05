@@ -20,8 +20,6 @@
 | 16 | Falha de gravação em cada ponto | Erro de infraestrutura e estado integralmente inalterado | `TestCraftWriteFailuresRollbackInventoryAndOperation` passou para `inventory_write`, `operation_write`, `commit` |
 | 17 | Rollback após falha antes do commit | Inventário e idempotência retornam ao baseline | coberto no caso 16 em `commit` |
 
-Casos adicionais: receita ativa/inativa, fingerprint conflitante, capacidade esgotada, sessões em personagens diferentes e operações multicharacter futuras. Fuzz/property tests devem verificar conservação, pilhas positivas dentro do limite, slots únicos e estado invariável em rejeições.
+Casos adicionais cobertos: fingerprint conflitante (`TestCraftSameKeyDifferentPayloadConflicts`), capacidade esgotada (`TestMemoryStoreFailsClosedAtOperationCapacity`), autorização e modo demo (`TestCraftRequiresAuthorizedCharacterAndDemoMode`), política server-side (`TestCraftRequirementsUseServerSideChecker`), operações add/remove/transfer idempotentes (`TestInventoryAddRemoveAndTransferAreIdempotent`) e falha de transferência (`TestTransferFailureLeavesBothInventoriesUnchanged`). Fuzz smoke `FuzzAddRemoveConservesQuantity` verifica conservação em adições.
 
-Fault injection deve falhar antes/depois de cada write (consumo, crédito, registro idempotente e commit). O gate inclui `go test -race ./...`; propriedades não substituem testes explícitos concorrentes e de rollback.
-
-Toda linha deve ser marcada como coberta com referência ao teste correspondente somente após sua execução. O gate inclui `go test -race ./...`.
+Fault injection falha após a gravação local de inventário, após o registro idempotente e no commit; todas as mutações locais são descartadas. O gate inclui `go test -race ./...`; o fuzz smoke não substitui testes explícitos concorrentes e de rollback.

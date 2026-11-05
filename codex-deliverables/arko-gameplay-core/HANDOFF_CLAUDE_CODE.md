@@ -7,6 +7,7 @@
 5. Inspecione cada garantia de atomicidade: consumo, entrega e idempotência devem comitar juntos; injete falhas antes/depois de cada write. Rejeite adaptador que permita perda/duplicação.
 6. Implemente persistência PostgreSQL apenas após decisão de schema/isolation/lock e revisão das migrações autorizadas. Não conecte ao gateway MOCK nem altere protocolo 12000.
 7. Vincule personagem à sessão no servidor; não aceite autoridade ou autorização do cliente Godot.
-8. Execute `gofmt`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...` e testes de integração contra ambiente local isolado e autorizado.
-9. Preserve ativos, dados e credenciais; não faça deploy, merge ou alteração de bancos sem autorização explícita.
-10. Documente incompatibilidades, decisões pendentes e testes faltantes; rejeite a integração se qualquer evidência contradizer este contrato.
+8. Valide `schemas/v1/` e fixtures `examples/` com `python tests/validate_contracts.py`; confira que todos os exemplos têm `demo_only` ou aviso DEMONSTRAÇÃO.
+9. Execute `gofmt`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...`, o fuzz smoke do workflow e testes de integração contra ambiente local isolado e autorizado.
+10. Preserve ativos, dados e credenciais; não faça deploy, merge ou alteração de bancos sem autorização explícita.
+11. Documente incompatibilidades, decisões pendentes e testes faltantes; rejeite a integração se qualquer evidência contradizer este contrato.

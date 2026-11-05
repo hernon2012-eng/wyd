@@ -1,0 +1,11 @@
+{
+  "notice": "DEMONSTRAÇÃO — inventário sintético; IDs e quantidades não são dados oficiais.",
+  "inventory": {
+    "character_id": "character_demo",
+    "slots": [
+      {"item_id": "demo:fiber", "quantity": 3},
+      {"quantity": 0},
+      {"item_id": "demo:widget", "quantity": 1}
+    ]
+  }
+}

@@ -25,6 +25,19 @@ func ValidateInventory(inventory Inventory, definitions map[ItemID]ItemDefinitio
 	return nil
 }
 
+func FreeSlots(inventory Inventory) (int, error) {
+	if !validInventoryShape(inventory) {
+		return 0, ErrInvalidRequest
+	}
+	free := 0
+	for _, slot := range inventory.Slots {
+		if slot.ItemID == "" {
+			free++
+		}
+	}
+	return free, nil
+}
+
 func AddItems(inventory *Inventory, definition ItemDefinition, quantity int64) error {
 	if inventory == nil || !validDefinition(definition) || quantity <= 0 || !validInventoryShape(*inventory) {
 		return ErrInvalidRequest
@@ -194,7 +207,7 @@ func validInventoryShape(inventory Inventory) bool {
 }
 
 func validRecipe(recipe Recipe) bool {
-	if !validID(string(recipe.ID)) || recipe.Version == 0 || strings.TrimSpace(recipe.Name) == "" || len(recipe.Name) > 128 || len(recipe.Materials) == 0 || len(recipe.Materials) > MaxRecipeMaterials {
+	if !validID(string(recipe.ID)) || recipe.Version == 0 || strings.TrimSpace(recipe.Name) == "" || len(recipe.Name) > 128 || len(recipe.Materials) == 0 || len(recipe.Materials) > MaxRecipeMaterials || len(recipe.Requirements) > MaxRecipeMaterials {
 		return false
 	}
 	if !validID(string(recipe.Product.ItemID)) || recipe.Product.Quantity <= 0 {

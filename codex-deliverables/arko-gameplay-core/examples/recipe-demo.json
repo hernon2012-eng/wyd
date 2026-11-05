@@ -1,0 +1,16 @@
+{
+  "notice": "DEMONSTRAÇÃO — dados fictícios, sem relação com catálogo oficial do WYD.",
+  "recipe": {
+    "recipe_id": "demo:widget_v1",
+    "version": 1,
+    "name": "Widget Demonstrativo",
+    "materials": [
+      {"item_id": "demo:fiber", "quantity": 2},
+      {"item_id": "demo:resin", "quantity": 1}
+    ],
+    "product": {"item_id": "demo:widget", "quantity": 1},
+    "requirements": [],
+    "active": true,
+    "demo_only": true
+  }
+}

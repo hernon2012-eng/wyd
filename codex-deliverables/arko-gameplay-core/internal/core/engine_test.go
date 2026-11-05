@@ -268,7 +268,7 @@ func TestCraftSameKeyDifferentPayloadConflicts(t *testing.T) {
 		t.Fatal(err)
 	}
 	result, err := engine.Craft(context.Background(), actor, craftRequest("craft_conflict", 2))
-	if err != nil || result.Code != CodeIdempotencyConflict || result.Status != OperationRejected {
+	if err != nil || result.Code != CodeIdempotencyConflict || result.Status != OperationRejected || result.OperationID == "" {
 		t.Fatalf("Craft() = %#v, %v", result, err)
 	}
 }
@@ -345,5 +345,119 @@ func TestMemoryStoreFailsClosedAtOperationCapacity(t *testing.T) {
 	}
 	if inventory, _ := store.Snapshot("char_demo"); inventory.Slots[2].Quantity != 1 {
 		t.Fatalf("capacity rejection changed inventory: %#v", inventory.Slots)
+	}
+}
+
+func TestInventoryAddRemoveAndTransferAreIdempotent(t *testing.T) {
+	store, engine, actor := newCraftFixture(t, []Slot{{ItemID: "demo:fiber", Quantity: 5}, {}, {}}, demoRecipe())
+	if err := store.SeedInventory(Inventory{CharacterID: "char_alt", Slots: []Slot{{}, {}}}); err != nil {
+		t.Fatal(err)
+	}
+	add := AddRequest{RequestID: "req_add", IdempotencyKey: "inventory_add", CharacterID: "char_demo", Item: ItemAmount{ItemID: "demo:resin", Quantity: 2}}
+	first, err := engine.Add(context.Background(), actor, add)
+	if err != nil || first.Status != OperationCompleted {
+		t.Fatalf("Add() = %#v, %v", first, err)
+	}
+	add.RequestID = "req_add_retry"
+	if replay, err := engine.Add(context.Background(), actor, add); err != nil || !replay.Replayed {
+		t.Fatalf("Add replay = %#v, %v", replay, err)
+	}
+	remove := RemoveRequest{RequestID: "req_remove", IdempotencyKey: "inventory_remove", CharacterID: "char_demo", Item: ItemAmount{ItemID: "demo:fiber", Quantity: 2}}
+	if result, err := engine.Remove(context.Background(), actor, remove); err != nil || result.Status != OperationCompleted {
+		t.Fatalf("Remove() = %#v, %v", result, err)
+	}
+	transfer := TransferRequest{RequestID: "req_transfer", IdempotencyKey: "inventory_transfer", Source: "char_demo", Destination: "char_alt", Item: ItemAmount{ItemID: "demo:fiber", Quantity: 2}}
+	if result, err := engine.Transfer(context.Background(), actor, transfer); err != nil || result.Status != OperationCompleted {
+		t.Fatalf("Transfer() = %#v, %v", result, err)
+	}
+	transfer.RequestID = "req_transfer_retry"
+	if replay, err := engine.Transfer(context.Background(), actor, transfer); err != nil || !replay.Replayed {
+		t.Fatalf("Transfer replay = %#v, %v", replay, err)
+	}
+	source, _ := store.Snapshot("char_demo")
+	destination, _ := store.Snapshot("char_alt")
+	if inventoryQuantity(source, "demo:fiber") != 1 || inventoryQuantity(destination, "demo:fiber") != 2 || inventoryQuantity(source, "demo:resin") != 2 {
+		t.Fatalf("unexpected inventories: source=%#v destination=%#v", source.Slots, destination.Slots)
+	}
+}
+
+func TestTransferFailureLeavesBothInventoriesUnchanged(t *testing.T) {
+	store, engine, actor := newCraftFixture(t, []Slot{{ItemID: "demo:fiber", Quantity: 4}}, demoRecipe())
+	if err := store.SeedInventory(Inventory{CharacterID: "char_alt", Slots: []Slot{{ItemID: "demo:resin", Quantity: 10}}}); err != nil {
+		t.Fatal(err)
+	}
+	sourceBefore, _ := store.Snapshot("char_demo")
+	destinationBefore, _ := store.Snapshot("char_alt")
+	request := TransferRequest{RequestID: "req_transfer_full", IdempotencyKey: "transfer_full", Source: "char_demo", Destination: "char_alt", Item: ItemAmount{ItemID: "demo:fiber", Quantity: 1}}
+	result, err := engine.Transfer(context.Background(), actor, request)
+	sourceAfter, _ := store.Snapshot("char_demo")
+	destinationAfter, _ := store.Snapshot("char_alt")
+	if err != nil || result.Code != CodeInventoryFull || !reflect.DeepEqual(sourceBefore, sourceAfter) || !reflect.DeepEqual(destinationBefore, destinationAfter) {
+		t.Fatalf("result=%#v err=%v source_changed=%v destination_changed=%v", result, err, !reflect.DeepEqual(sourceBefore, sourceAfter), !reflect.DeepEqual(destinationBefore, destinationAfter))
+	}
+}
+
+func TestInventoryMutationsRejectNegativeQuantities(t *testing.T) {
+	store, engine, actor := newCraftFixture(t, []Slot{{ItemID: "demo:fiber", Quantity: 5}, {}}, demoRecipe())
+	before, _ := store.Snapshot("char_demo")
+	addResult, addErr := engine.Add(context.Background(), actor, AddRequest{RequestID: "req_add_negative", IdempotencyKey: "add_negative", CharacterID: "char_demo", Item: ItemAmount{ItemID: "demo:fiber", Quantity: -1}})
+	removeResult, removeErr := engine.Remove(context.Background(), actor, RemoveRequest{RequestID: "req_remove_negative", IdempotencyKey: "remove_negative", CharacterID: "char_demo", Item: ItemAmount{ItemID: "demo:fiber", Quantity: -1}})
+	after, _ := store.Snapshot("char_demo")
+	if addErr != nil || removeErr != nil || addResult.Code != CodeInvalidRequest || removeResult.Code != CodeInvalidRequest || !reflect.DeepEqual(before, after) {
+		t.Fatalf("add=%#v/%v remove=%#v/%v state_changed=%v", addResult, addErr, removeResult, removeErr, !reflect.DeepEqual(before, after))
+	}
+}
+
+type fixedRequirementChecker struct {
+	accepted bool
+	err      error
+}
+
+func (checker fixedRequirementChecker) Check(context.Context, Actor, CharacterID, []RecipeRequirement) (bool, error) {
+	return checker.accepted, checker.err
+}
+
+func TestCraftRequirementsUseServerSideChecker(t *testing.T) {
+	store := NewMemoryStore(20)
+	for _, definition := range []ItemDefinition{
+		{ID: "demo:fiber", Name: "Demo Fiber", Kind: ItemKindMaterial, MaxStack: 10},
+		{ID: "demo:widget", Name: "Demo Widget", Kind: ItemKindGeneric, MaxStack: 5},
+	} {
+		if err := store.SeedItemDefinition(definition); err != nil {
+			t.Fatal(err)
+		}
+	}
+	recipe := Recipe{ID: "demo:restricted", Version: 1, Name: "Demo Restricted", Materials: []ItemAmount{{ItemID: "demo:fiber", Quantity: 1}}, Product: ItemAmount{ItemID: "demo:widget", Quantity: 1}, Requirements: []RecipeRequirement{{Key: "demo:level", Value: "2"}}, Active: true, DemoOnly: true}
+	if err := store.SeedRecipe(recipe); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SeedInventory(Inventory{CharacterID: "char_demo", Slots: []Slot{{ItemID: "demo:fiber", Quantity: 2}, {}}}); err != nil {
+		t.Fatal(err)
+	}
+	engine, err := NewEngine(store, EngineOptions{AllowDemoRecipes: true, Requirements: fixedRequirementChecker{accepted: false}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := CraftRequest{RequestID: "req_requirements", IdempotencyKey: "requirements", CharacterID: "char_demo", RecipeID: recipe.ID, RecipeVersion: recipe.Version, Quantity: 1}
+	result, err := engine.Craft(context.Background(), demoActor(), request)
+	if err != nil || result.Code != CodeRequirementsNotMet {
+		t.Fatalf("Craft() = %#v, %v", result, err)
+	}
+	engine, err = NewEngine(store, EngineOptions{AllowDemoRecipes: true, Requirements: fixedRequirementChecker{accepted: true}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.IdempotencyKey = "requirements_pass"
+	result, err = engine.Craft(context.Background(), demoActor(), request)
+	if err != nil || result.Status != OperationCompleted {
+		t.Fatalf("accepted requirement Craft() = %#v, %v", result, err)
+	}
+	engine, err = NewEngine(store, EngineOptions{AllowDemoRecipes: true, Requirements: fixedRequirementChecker{err: errors.New("lookup unavailable")}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.IdempotencyKey = "requirements_error"
+	if _, err := engine.Craft(context.Background(), demoActor(), request); !errors.Is(err, ErrStorage) {
+		t.Fatalf("requirement lookup error = %v, want storage error", err)
 	}
 }

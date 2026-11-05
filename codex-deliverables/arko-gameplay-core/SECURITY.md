@@ -4,7 +4,7 @@
 - Quantidade zero/negativa, overflow, slots inválidos, itens desconhecidos, receita inativa e payload divergente são rejeitados.
 - Operações mutáveis requerem chave única por `(character_id, operation_type, idempotency_key)` e fingerprint semântico. Sessões distintas do mesmo personagem compartilham o mesmo escopo de replay.
 - Consumo, entrega e registro da operação precisam ser atômicos. Um resultado de sucesso nunca deve preceder o commit.
-- Não confie no `character_id` fornecido no payload; a camada autenticada deve vincular o personagem à sessão e autorização.
+- Não confie no `character_id` fornecido no payload; a camada autenticada deve vincular o personagem à sessão e autorização. O `Actor` passado ao motor deve ser montado pelo adaptador confiável e não desserializado de dados do cliente.
 - Limite tamanho de payload, comprimento/charset das chaves, quantidade solicitada, número de materiais e recursos consumidos. Ao atingir capacidade, o armazenamento em memória deve falhar fechado; evicção silenciosa reabilitaria uma chave.
 - Falhas internas não devem revelar tokens, estado de outros personagens ou dados de banco. Operações em personagens diferentes não compartilham inventário/resultado; operações multicharacter futuras exigem locks em ordem determinística.
 - O mock em memória não oferece durabilidade, coordenação multi-instância, autenticação ou proteção contra replay entre reinícios. Não o exponha como backend de produção.

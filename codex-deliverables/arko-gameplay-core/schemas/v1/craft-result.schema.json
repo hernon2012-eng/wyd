@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/arko-gameplay-core/v1/craft-result.schema.json",
+  "title": "ARKO Craft Result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation_id", "request_id", "status"],
+  "properties": {
+    "operation_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "request_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "status": {"enum": ["completed", "rejected"]},
+    "code": {"enum": ["invalid_request", "recipe_not_found", "recipe_inactive", "requirements_not_met", "insufficient_materials", "inventory_full", "item_not_found", "insufficient_items", "idempotency_conflict", "demo_recipe_disabled"]},
+    "consumed": {"type": "array", "items": {"$ref": "#/$defs/itemAmount"}},
+    "produced": {"type": "array", "items": {"$ref": "#/$defs/itemAmount"}},
+    "replayed": {"type": "boolean"}
+  },
+  "$defs": {
+    "itemAmount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "quantity"],
+      "properties": {
+        "item_id": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$"},
+        "quantity": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

@@ -27,3 +27,13 @@
 - Testes cobrindo os 17 casos da matriz, incluindo concorrência, retry após resposta perdida, recuperação de storage failure e rollback por failpoint.
 - Validação executada: `gofmt -w internal/core`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...` e `gofmt -l` passaram.
 - Limite desta etapa: `MemoryStore` é globalmente serializado e volátil; a interface não comprova implementação durável nem multi-processo.
+
+## 2026-11-05 — Contratos, exemplos e CI
+
+- C2 publicado: `798294c` (`feat: add atomic crafting and idempotency`) em `origin/codex/arko-gameplay-core`.
+- Adicionados quatro schemas v1, quatro fixtures DEMONSTRAÇÃO, validação Draft 2020-12 e workflow próprio do pacote.
+- Acrescentados testes do serviço de add/remove/transfer, slots livres e decisões de requisito no servidor; limites de requisitos também validados.
+- Revisão contrato/schema identificou e corrigiu `operation_id` ausente em conflito idempotente; teste regressivo adicionado.
+- `python tests/validate_contracts.py` passou. A última rodada do fuzz smoke `FuzzAddRemoveConservesQuantity` executou 42.587 casos em 2 s.
+- Após a correção de conflito, passaram `gofmt -l`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...`, validador JSON, fuzz smoke e `git diff --check`.
+- Próximo passo: commitar/publicar C3 e conferir a árvore final.

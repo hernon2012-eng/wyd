@@ -273,7 +273,11 @@ func (e *Engine) execute(ctx context.Context, scope OperationScope, requestID, r
 		return tx.PutOperation(record)
 	})
 	if errors.Is(err, ErrIdempotencyConflict) {
-		return OperationResult{RequestID: requestID, Status: OperationRejected, Code: CodeIdempotencyConflict}, nil
+		operationID, idErr := newOperationID()
+		if idErr != nil {
+			return OperationResult{}, fmt.Errorf("%w: operation id generation: %v", ErrStorage, idErr)
+		}
+		return OperationResult{OperationID: operationID, RequestID: requestID, Status: OperationRejected, Code: CodeIdempotencyConflict}, nil
 	}
 	return result, err
 }
