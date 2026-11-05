@@ -51,3 +51,14 @@
 - O workflow dedicado `.github/workflows/arko-gameplay-postgres.yml` contém serviço PostgreSQL e o gate CI, mas ainda não foi executado no GitHub. Preservado também o workflow de CI publicado do Pacote 2.
 - Segurança: duas revisões independentes do adapter, incluindo migrações, concorrência, isolamento e alterações finais, não encontraram vulnerabilidades.
 - Nenhum teste foi executado contra `wyd`/`wyd_dev`; sem merge ou deploy. Push remoto depende de autenticação GitHub disponível.
+
+## 2026-11-05 — Publicação e CI remota do Pacote 3
+
+- Autorização GitHub concluída pelo fluxo de dispositivo; o escopo `workflow` foi concedido para publicar os arquivos de Actions.
+- Publicada sem force a branch `codex/arko-gameplay-postgres`, incluindo `7f744402ae4bcc2111c242af8aec79bf2374c286`, `3f046a517da20063cd913acf9d5f5b11383e5b88` e `f38d3d85dc34509fc0b57a49fc902b39affb8d76`.
+- SHA remoto confirmado por `git ls-remote`: `f38d3d85dc34509fc0b57a49fc902b39affb8d76`, igual ao HEAD local.
+- GitHub Actions `42123905756` para o push de `f38d3d85dc34509fc0b57a49fc902b39affb8d76` concluiu com `success`; jobs `go`, `contracts` e `postgres-integration` passaram. O job de integração executou `go test ./... -count=1` e `go test -race ./... -count=1` contra o serviço PostgreSQL 16.
+- A execução local anterior também passou com PostgreSQL 16 descartável; o container de teste foi removido.
+- A revisão de segurança independente previamente registrada não encontrou vulnerabilidades no escopo revisado. Isso não equivale a integração, deploy ou aprovação para usar o WYD real.
+- O `STATUS_GERAL_ARKO.md` permanece sem alteração no worktree `codex/arko-foundation`; sua seção do Pacote 3 está desatualizada e precisa de atualização coordenada após revisão. Não foram localizados `ROADMAP_PRODUCAO_ARKO.md` nem `CONSOLIDACAO_ARQUITETURAL_ARKO.md`.
+- Nenhum banco WYD foi acessado/migrado; não houve merge nem deploy. Ponto de parada: aguardar revisão do usuário, sem iniciar outros pacotes.
