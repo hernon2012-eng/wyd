@@ -23,3 +23,16 @@
 Casos adicionais cobertos: fingerprint conflitante (`TestCraftSameKeyDifferentPayloadConflicts`), capacidade esgotada (`TestMemoryStoreFailsClosedAtOperationCapacity`), autorização e modo demo (`TestCraftRequiresAuthorizedCharacterAndDemoMode`), política server-side (`TestCraftRequirementsUseServerSideChecker`), operações add/remove/transfer idempotentes (`TestInventoryAddRemoveAndTransferAreIdempotent`) e falha de transferência (`TestTransferFailureLeavesBothInventoriesUnchanged`). Fuzz smoke `FuzzAddRemoveConservesQuantity` verifica conservação em adições.
 
 Fault injection falha após a gravação local de inventário, após o registro idempotente e no commit; todas as mutações locais são descartadas. O gate inclui `go test -race ./...`; o fuzz smoke não substitui testes explícitos concorrentes e de rollback.
+
+## PostgreSQL
+
+| Caso | Esperado | Cobertura/estado |
+|---|---|---|
+| Persistência/reinício e fabricação | Dados e resultado idempotente sobrevivem ao reinício do adapter; craft atômico | `TestPostgresPersistentInventoryAndRestartRecovery`, `TestPostgresCraftingTransactionAtomicity` passaram contra PostgreSQL 16 local |
+| Transferência e replay concorrente | Transferência única; requisições duplicadas compartilham um resultado | `TestPostgresTransfers`, `TestPostgresConcurrentDuplicateRequests`, `TestPostgresSameIdempotencyKeyDifferentContent` passaram |
+| Rollbacks | Falha de gravação/entrega/registro não persiste inventário parcial nem operação | `TestPostgresRollbackOnInventoryWriteFailure`, `TestPostgresRollbackOnDeliveryFailure`, `TestPostgresRollbackOnOperationRecordFailure` passaram |
+| Concorrência/deadlock | Fabricações e transferências concorrentes mantêm estoque consistente sem deadlock | `TestPostgresSimultaneousCrafts`, `TestPostgresOppositeDirectionTransfers`, `TestPostgresIndependentCharacterConcurrency` passaram |
+| Recuperação de conexão | Falha de conexão aborta transação e serviço processa transação subsequente | `TestPostgresRecoveryAfterConnectionFailure` passou |
+| Isolamento do banco de teste | Conexão apenas ao serviço descartável `arko_test` | `ARKO_POSTGRES_TEST_DSN` explícito; harness recusa endpoint fora do host/porta/banco/usuário isolados |
+
+Os testes em `internal/postgres/store_test.go` usam `sqlmock` e complementam, mas não contam como integração real. Os testes `TestPostgres*` foram executados localmente contra PostgreSQL 16 descartável em `127.0.0.1:55432/arko_test`, tanto com `go test ./...` quanto com `go test -race ./...`. O job do GitHub Actions permanece pendente.

@@ -38,3 +38,15 @@
 - Após a correção de conflito, passaram `gofmt -l`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...`, validador JSON, fuzz smoke e `git diff --check`.
 - C3 publicado: `599c933` (`feat: add gameplay contracts and CI`) em `origin/codex/arko-gameplay-core`.
 - Conferência final da branch e estado Git registrada após o commit de metadados.
+
+## 2026-11-05 — Gate PostgreSQL real
+
+- Implementado adapter pgx v5 via `database/sql`, mantendo o contrato `*sql.DB`; criadas migrações ARKO versionadas e explícitas para tabelas `arko_gameplay_*`. `NewStore` não migra automaticamente.
+- Refatorado `Transaction` para leituras que retornam erros; `Engine` e `MemoryStore` preservam erros de storage/cancelamento. O PostgreSQL propaga contextos, usa `READ COMMITTED`, advisory lock de chave idempotente e `SELECT FOR UPDATE` para inventários em ordem estável. Erros SQLSTATE 40001/40P01 são marcados `ErrRetryableStorage`; não há retry automático.
+- Idempotência é imutável: insert em conflito falha e não atualiza resultado anterior. Inventário e registro terminal são gravados no mesmo commit.
+- Implementada integração real com schema descartável único por teste, host/porta/banco/usuário fixos; nenhum banco WYD é usado. Adicionados casos de persistência/restart, crafting, transfer, duplicação, conflito de payload, rollback, concorrência e falha de conexão.
+- C4 de código commitado localmente em `7f74440` (`feat: harden PostgreSQL gameplay persistence`). `git push origin codex/arko-gameplay-postgres` falhou: `fatal: unable to get password from user`; não há credencial GitHub configurada.
+- Execuções locais contra PostgreSQL 16 descartável `arko_test`: `go test ./...` passou; `go test -race ./...` passou; `go vet ./...` passou; `go build ./...` passou; `test -z "$(gofmt -l .)"` passou; `python tests/validate_contracts.py` validou quatro schemas/exemplos; `git diff --check` passou.
+- O workflow dedicado `.github/workflows/arko-gameplay-postgres.yml` contém serviço PostgreSQL e o gate CI, mas ainda não foi executado no GitHub. Preservado também o workflow de CI publicado do Pacote 2.
+- Segurança: duas revisões independentes do adapter, incluindo migrações, concorrência, isolamento e alterações finais, não encontraram vulnerabilidades.
+- Nenhum teste foi executado contra `wyd`/`wyd_dev`; sem merge ou deploy. Push remoto depende de autenticação GitHub disponível.

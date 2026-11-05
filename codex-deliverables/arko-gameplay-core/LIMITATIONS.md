@@ -5,8 +5,10 @@
 - O contrato de autorização recebe `Actor` confiável do chamador; este módulo não implementa autenticação/sessão nem transporte.
 - Este pacote não integra ao servidor W2PP, ao gateway MOCK ou ao protocolo 12000.
 - O armazenamento em memória é apenas demonstrativo/testável: perde sessões/operações em reinício, não fornece garantia exactly-once após restart e não coordena processos.
-- Não há migração PostgreSQL nem alegação de garantia de durabilidade até implementar e testar backend persistente.
+- O adaptador/migrações foram testados em PostgreSQL 16 descartável local, incluindo recuperação e concorrência. O GitHub Actions remoto ainda não foi executado/confirmado nesta etapa. Isso não migra o banco WYD nem autoriza uso em produção.
+- O adapter usa pgx v5 via `database/sql` para preservar o contrato existente `*sql.DB`. O chamador ainda é responsável por abrir a conexão com uma configuração segura e por chamar `Store.Migrate` somente depois de validar o destino; migrações não são automáticas.
+- O limite de capacidade idempotente é exato e usa um advisory lock global na etapa de escrita do registro; isso serializa a finalização de operações entre personagens e pode limitar throughput. Não há retenção/expurgo automático dos registros.
 - Autenticação, autorização, propriedade real do personagem, logs de auditoria e decisões de gameplay dependem do servidor local.
 - Produção com filas, estações, tempo, retirada, personagens auxiliares e cotas por conta está fora do motor básico.
 - Não foi selecionada licença para o pacote; não se altera a licença do repositório ou de dependências anteriores.
-- O workflow CI foi adicionado, mas precisa de execução no GitHub Actions após publicação; resultados locais não certificam a execução remota.
+- O workflow `.github/workflows/arko-gameplay-postgres.yml` define validações Go, schemas e integração usando exclusivamente o serviço PostgreSQL descartável e `ARKO_POSTGRES_TEST_DSN`. Não configure um DSN de banco WYD.
