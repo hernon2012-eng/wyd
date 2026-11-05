@@ -1,0 +1,7 @@
+{
+  "type": "account",
+  "query": "<demo-search-text>",
+  "page": 1,
+  "page_size": 10,
+  "reason": "DEMONSTRAÇÃO — validação local"
+}

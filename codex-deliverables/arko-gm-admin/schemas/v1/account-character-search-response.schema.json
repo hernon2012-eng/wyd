@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/account-character-search-response.schema.json",
+  "title": "Read-only account and character search response",
+  "description": "Search results use generic references and contain no mutation controls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "accounts",
+    "characters",
+    "next_cursor"
+  ],
+  "properties": {
+    "accounts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/accountResult"
+      }
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/characterResult"
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "$defs": {
+    "accountResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account_ref",
+        "display_name"
+      ],
+      "properties": {
+        "account_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "characterResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "character_ref",
+        "account_ref",
+        "display_name"
+      ],
+      "properties": {
+        "character_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

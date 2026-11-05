@@ -1,0 +1,8 @@
+{
+  "reason": "DEMONSTRAÇÃO — validação local",
+  "target_ref": "<target-ref>",
+  "arguments": {
+    "note": "<demo-argument-placeholder>"
+  },
+  "dry_run": true
+}

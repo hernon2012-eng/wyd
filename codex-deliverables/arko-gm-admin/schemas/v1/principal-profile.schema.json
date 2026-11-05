@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/principal-profile.schema.json",
+  "title": "Principal profile",
+  "description": "Generic principal profile. Role names are labels only and imply no permissions or grants.",
+  "$comment": "No official role-to-permission mapping is specified by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "principal_ref",
+    "display_name",
+    "role",
+    "status"
+  ],
+  "properties": {
+    "principal_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "player",
+        "moderator",
+        "admin"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suspended",
+        "disabled"
+      ]
+    }
+  }
+}

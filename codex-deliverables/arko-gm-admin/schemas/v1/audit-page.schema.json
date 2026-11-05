@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audit event page",
+  "description": "Paginated collection of audit events.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "events",
+    "next_cursor"
+  ],
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "audit-event.schema.json"
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

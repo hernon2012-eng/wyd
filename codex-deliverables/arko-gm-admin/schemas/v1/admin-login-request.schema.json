@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/admin-login-request.schema.json",
+  "title": "Admin login request",
+  "description": "Credential submission shape only; this schema does not define authorization policy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "username",
+    "password"
+  ],
+  "properties": {
+    "username": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 72
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/account-character-search-request.schema.json",
+  "title": "Read-only account and character search request",
+  "description": "DEMONSTRAÇÃO-capable search request only; it performs no mutation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "query",
+    "reason"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["account", "character"]
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "page": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000,
+      "default": 1
+    },
+    "page_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 25
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    }
+  }
+}

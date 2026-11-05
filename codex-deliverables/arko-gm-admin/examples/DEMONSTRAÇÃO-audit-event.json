@@ -1,0 +1,13 @@
+{
+  "event_ref": "<audit-event-ref>",
+  "occurred_at": "2026-01-01T00:00:00Z",
+  "actor_ref": "<principal-ref>",
+  "actor_role": "moderator",
+  "action": "<demo-action>",
+  "target_type": "<demo-target-type>",
+  "target_ref": "<target-ref>",
+  "permission": "directory.read",
+  "reason": "DEMONSTRAÇÃO — validação local",
+  "request_id": "<request-ref>",
+  "outcome": "approved"
+}

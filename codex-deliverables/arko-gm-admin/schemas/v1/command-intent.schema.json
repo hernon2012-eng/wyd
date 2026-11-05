@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/command-intent.schema.json",
+  "title": "DEMONSTRAÇÃO command request",
+  "description": "Request shape for a registered dry-run command. No official game command is registered.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reason",
+    "dry_run"
+  ],
+  "properties": {
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "target_ref": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "arguments": {
+      "type": "object"
+    },
+    "dry_run": {
+      "const": true
+    }
+  }
+}

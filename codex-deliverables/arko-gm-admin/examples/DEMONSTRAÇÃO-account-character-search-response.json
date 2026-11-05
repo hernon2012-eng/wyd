@@ -1,0 +1,16 @@
+{
+  "accounts": [
+    {
+      "account_ref": "<account-ref>",
+      "display_name": "<demo-account-name>"
+    }
+  ],
+  "characters": [
+    {
+      "character_ref": "<character-ref>",
+      "account_ref": "<account-ref>",
+      "display_name": "<demo-character-name>"
+    }
+  ],
+  "next_cursor": null
+}

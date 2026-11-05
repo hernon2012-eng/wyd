@@ -1,0 +1,120 @@
+name: Arko GM Admin
+
+on:
+  push:
+    paths:
+      - ".github/workflows/arko-gm-admin.yml"
+      - "codex-deliverables/arko-gm-admin/**"
+      - "web/**"
+  pull_request:
+    paths:
+      - ".github/workflows/arko-gm-admin.yml"
+      - "codex-deliverables/arko-gm-admin/**"
+      - "web/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: arko_admin_test
+          POSTGRES_USER: arko_admin
+          POSTGRES_PASSWORD: local-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arko_admin -d arko_admin_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ARKO_ADMIN_TEST_DATABASE_URL: postgres://arko_admin:local-test-only@localhost:5432/arko_admin_test?sslmode=disable
+    defaults:
+      run:
+        working-directory: codex-deliverables/arko-gm-admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: codex-deliverables/arko-gm-admin/go.mod
+          cache-dependency-path: |
+            codex-deliverables/arko-gm-admin/go.mod
+            codex-deliverables/arko-gm-admin/go.sum
+
+      - name: Check gofmt
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            printf 'Go files need gofmt:\n%s\n' "$unformatted"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Run race tests
+        run: go test -race ./...
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Validate JSON and JSON Schemas
+        run: |
+          python -m pip install --disable-pip-version-check check-jsonschema
+          python - <<'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          json_files = sorted(Path(".").rglob("*.json"))
+          for path in json_files:
+              try:
+                  json.loads(path.read_text(encoding="utf-8"))
+              except (OSError, UnicodeError, json.JSONDecodeError) as error:
+                  print(f"{path}: {error}", file=sys.stderr)
+                  sys.exit(1)
+
+          schemas = sorted(Path(".").rglob("*.schema.json"))
+          if not schemas:
+              raise SystemExit("No *.schema.json files found.")
+          subprocess.run(
+              ["check-jsonschema", "--check-metaschema", *map(str, schemas)],
+              check=True,
+          )
+          examples = {
+              "DEMONSTRAÇÃO-admin-login-request.json": "admin-login-request.schema.json",
+              "DEMONSTRAÇÃO-admin-login-response.json": "admin-login-response.schema.json",
+              "DEMONSTRAÇÃO-account-character-search-request.json": "account-character-search-request.schema.json",
+              "DEMONSTRAÇÃO-account-character-search-response.json": "account-character-search-response.schema.json",
+              "DEMONSTRAÇÃO-audit-event.json": "audit-event.schema.json",
+              "DEMONSTRAÇÃO-audit-page.json": "audit-page.schema.json",
+              "DEMONSTRAÇÃO-command-intent.json": "command-intent.schema.json",
+              "DEMONSTRAÇÃO-command-result.json": "command-result.schema.json",
+              "DEMONSTRAÇÃO-principal-profile.json": "principal-profile.schema.json",
+          }
+          for example, schema in examples.items():
+              subprocess.run(
+                  [
+                      "check-jsonschema",
+                      "--schemafile",
+                      f"schemas/v1/{schema}",
+                      f"examples/{example}",
+                  ],
+                  check=True,
+              )
+          PY

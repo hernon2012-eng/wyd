@@ -1,0 +1,11 @@
+{
+  "access_token": "<non-secret-demo-token-placeholder>",
+  "token_type": "Bearer",
+  "expires_at": "2026-01-01T01:00:00Z",
+  "principal": {
+    "principal_ref": "<principal-ref>",
+    "display_name": "<demo-display-name>",
+    "role": "admin",
+    "status": "active"
+  }
+}

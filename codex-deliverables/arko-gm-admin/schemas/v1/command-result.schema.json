@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/command-result.schema.json",
+  "title": "Command result",
+  "description": "Generic outcome shape; it grants no permissions and defines no official command behavior.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intent_ref",
+    "status",
+    "message"
+  ],
+  "properties": {
+    "intent_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "completed",
+        "failed"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "result_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "audit_event_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

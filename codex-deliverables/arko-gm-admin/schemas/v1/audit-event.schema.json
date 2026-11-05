@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/arko-gm-admin/v1/audit-event.schema.json",
+  "title": "Audit event",
+  "description": "Persistent administrative audit event; references are opaque.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_ref",
+    "occurred_at",
+    "actor_ref",
+    "actor_role",
+    "action",
+    "target_type",
+    "target_ref",
+    "permission",
+    "reason",
+    "request_id",
+    "outcome"
+  ],
+  "properties": {
+    "event_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actor_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor_role": {
+      "type": "string",
+      "enum": ["player", "moderator", "admin"]
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "approved",
+        "denied",
+        "failed"
+      ]
+    },
+    "permission": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    }
+  }
+}

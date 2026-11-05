@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>LOCAL DEMONSTRAÇÃO — Painel GM/Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Pular para o conteúdo</a>
+    <header class="site-header">
+      <a class="brand" href="#main" aria-label="Painel GM/Admin, início">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>PAINEL <span class="brand-light">GM / ADMIN</span></span>
+      </a>
+      <span class="demo-badge">LOCAL DEMONSTRAÇÃO</span>
+    </header>
+
+    <main id="main">
+      <section class="notice" aria-label="Aviso de demonstração">
+        <strong>Ambiente local de demonstração.</strong>
+        <span>Não conectado ao WYD. Esta interface não altera dados de jogo.</span>
+      </section>
+
+      <div id="global-message" class="message" role="status" aria-live="polite" hidden></div>
+
+      <section id="sign-in" class="panel sign-in-panel" aria-labelledby="sign-in-title">
+        <p class="eyebrow">ACESSO RESTRITO</p>
+        <h1 id="sign-in-title">Entrar no painel</h1>
+        <p class="muted">Use uma sessão fornecida pelo serviço local de demonstração.</p>
+        <form id="sign-in-form">
+          <label for="username">Usuário</label>
+          <input id="username" name="username" autocomplete="username" required>
+          <label for="password">Senha</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button class="button button-primary" type="submit">Entrar</button>
+        </form>
+      </section>
+
+      <section id="workspace" hidden aria-labelledby="workspace-title">
+        <div class="workspace-heading">
+          <div>
+            <p class="eyebrow">VISÃO GERAL</p>
+            <h1 id="workspace-title">Painel GM / Admin</h1>
+          </div>
+          <button id="logout-button" class="button button-secondary" type="button">Sair e revogar sessão</button>
+        </div>
+
+        <section class="panel identity-panel" aria-labelledby="identity-title">
+          <div>
+            <p class="eyebrow">SESSÃO ATIVA</p>
+            <h2 id="identity-title">Identidade</h2>
+          </div>
+          <dl class="identity-details">
+            <div><dt>Conta</dt><dd id="identity-account">—</dd></div>
+            <div><dt>Função informada pela API</dt><dd id="identity-role">Não informada</dd></div>
+          </dl>
+          <p class="muted">A função é somente informativa. Este painel não concede nem altera permissões.</p>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel" aria-labelledby="directory-title">
+            <p class="eyebrow">CONSULTA SOMENTE LEITURA</p>
+            <h2 id="directory-title">Buscar conta ou personagem</h2>
+            <form id="directory-form">
+              <label for="directory-kind">Tipo</label>
+              <select id="directory-kind" name="kind">
+                <option value="account">Conta</option>
+                <option value="character">Personagem</option>
+              </select>
+              <label for="directory-query">Busca</label>
+              <input id="directory-query" name="query" type="search" autocomplete="off" required>
+              <label for="directory-reason">Motivo da consulta</label>
+              <textarea id="directory-reason" name="reason" maxlength="512" required></textarea>
+              <button class="button button-primary" type="submit">Buscar</button>
+            </form>
+            <div id="directory-message" class="message" role="status" aria-live="polite" hidden></div>
+            <div id="directory-results" class="result-list" aria-live="polite"></div>
+          </section>
+
+          <section class="panel" aria-labelledby="audit-title">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">REGISTROS</p>
+                <h2 id="audit-title">Auditoria</h2>
+              </div>
+              <button id="refresh-audit" class="button button-secondary" type="button">Atualizar</button>
+            </div>
+            <div id="audit-message" class="message" role="status" aria-live="polite" hidden></div>
+            <div id="audit-results" class="result-list" aria-live="polite"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>LOCAL DEMONSTRAÇÃO</span>
+      <span>Interface estática · sem ações de jogo</span>
+    </footer>
+  </body>
+</html>
