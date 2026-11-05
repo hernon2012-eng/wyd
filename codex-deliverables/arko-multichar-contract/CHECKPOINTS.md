@@ -10,3 +10,8 @@
    and a scoped diff/status review before handoff.
 5. **Complete — published implementation:** branch and commit are recorded below;
    CI validates formatting, Go tests, race, vet, build, and the schema/example contract.
+
+Published on `codex/arko-multichar-20261105` as
+`dc239df7edc95ae907542e2bcff9ecc27f181412`. Initial CI run
+[42133323446](https://github.com/hernon2012-eng/wyd/actions/runs/42133323446)
+passed. The workflow cache path is explicitly set to this module's `go.mod`.

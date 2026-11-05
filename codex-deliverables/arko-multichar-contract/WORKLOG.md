@@ -16,3 +16,6 @@
   checks.
 - Updated the synthetic fixture markers to use the exact `DEMONSTRAÇÃO` spelling
   and added a Go formatting check to the dedicated workflow.
+- Published commit `dc239df7edc95ae907542e2bcff9ecc27f181412` on branch
+  `codex/arko-multichar-20261105`; CI run `42133323446` passed. Set the Go
+  workflow cache dependency to the package module file.
