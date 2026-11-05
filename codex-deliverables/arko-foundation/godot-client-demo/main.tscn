@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://main.gd" id="1_main"]
+
+[node name="GatewayDiagnostic" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 28.0
+offset_right = -32.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "ARKO / Gateway diagnostic"
+
+[node name="Mode" type="Label" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BACKEND: MOCK"
+
+[node name="State" type="Label" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Estado: iniciando"
+
+[node name="Endpoint" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+text = "http://127.0.0.1:8080"
+
+[node name="RequestID" type="Label" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Request ID: -"
+
+[node name="Session" type="Label" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Sessão: não autenticada"
+
+[node name="Spacer" type="Control" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Reconnect" type="Button" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reconectar"
+
+[node name="Disconnect" type="Button" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Desconectar"
+
+[node name="Footer" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+text = "Nenhuma conta, personagem ou dado WYD é usado nesta demonstração."
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+unique_name_in_owner = true
+timeout = 5.0
+
+[node name="RetryTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+one_shot = true

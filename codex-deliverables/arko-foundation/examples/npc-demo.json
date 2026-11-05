@@ -1,0 +1,10 @@
+{
+  "contract_version": "1.0.0",
+  "definition_ref": "demo:npc-placeholder",
+  "revision": 1,
+  "model_ref": "demo:model-placeholder",
+  "name": "NPC de demonstração",
+  "location": { "map_ref": "demo:map-placeholder", "x": 0, "y": 0 },
+  "services": ["quest"],
+  "active": false
+}

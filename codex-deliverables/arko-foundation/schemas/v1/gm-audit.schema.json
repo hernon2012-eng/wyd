@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arko.invalid/schemas/v1/gm-audit.schema.json",
+  "title": "Administrative intent audit event v1",
+  "type": "object",
+  "required": ["contract_version", "event_id", "actor_ref", "action", "target_ref", "permission", "reason", "occurred_at", "outcome"],
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "actor_ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "action": { "enum": ["player_search", "player_select", "benefit_request", "admin_action"] },
+    "target_ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "permission": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "outcome": { "enum": ["requested", "approved", "denied", "failed"] }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+{
+  "contract_version": "1.0.0",
+  "recipe_ref": "demo:recipe-placeholder",
+  "revision": 1,
+  "ingredients": [{ "item_ref": "demo:material-a", "quantity": 2 }],
+  "level_required": 0,
+  "station_ref": "demo:station-placeholder",
+  "duration_seconds": 5,
+  "result": { "item_ref": "demo:output-placeholder", "quantity": 1 },
+  "demo_only": true
+}

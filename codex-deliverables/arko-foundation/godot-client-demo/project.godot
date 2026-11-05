@@ -1,0 +1,19 @@
+config_version=5
+
+[application]
+
+config/name="ARKO Gateway Diagnostic Demo"
+run/main_scene="res://main.tscn"
+
+[display]
+
+window/size/viewport_width=760
+window/size/viewport_height=460
+window/size/window_width_override=760
+window/size/window_height_override=460
+window/stretch/mode="canvas_items"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

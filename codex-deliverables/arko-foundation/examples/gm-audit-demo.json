@@ -1,0 +1,11 @@
+{
+  "contract_version": "1.0.0",
+  "event_id": "demo:event-placeholder",
+  "actor_ref": "demo:operator-placeholder",
+  "action": "player_search",
+  "target_ref": "demo:target-placeholder",
+  "permission": "demo:read-only-placeholder",
+  "reason": "Exemplo de validação contratual, sem ação real.",
+  "occurred_at": "2026-01-01T00:00:00Z",
+  "outcome": "requested"
+}

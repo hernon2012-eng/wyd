@@ -1,0 +1,9 @@
+{
+  "contract_version": "1.0.0",
+  "account_ref": "demo:account-placeholder",
+  "characters": [
+    { "character_ref": "demo:character-a", "progression": "Mortal", "revision": 0 },
+    { "character_ref": "demo:character-b", "progression": "Arch", "revision": 0 }
+  ],
+  "active_sessions": 1
+}
