@@ -6,9 +6,9 @@
 | Identity, sessions, authorization, audit, directory, API, and panel foundation | Complete locally | Go packages and embedded UI; deny-by-default grants; synthetic read-only directory; no registered commands |
 | PostgreSQL persistence and recovery validation | Complete locally | PostgreSQL 16 integration tests passed for API, session persistence/reconnect/revoke, concurrent session/audit writes, and audit mutation rejection |
 | Go and JSON contract validation | Complete locally | gofmt, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...`, JavaScript syntax, all schema meta-checks/examples passed |
-| Remote checkpoint publication | Pending | Commit/push the new branch, verify remote SHA, do not force-push |
-| Dedicated GitHub Actions validation | Pending | Await the workflow run after publication |
+| Remote checkpoint publication | Complete | Core commit `712d4cab0a55253d584c7dd4a197a49231979957`; integration commit `ba1f521946eb566df61303d4c49ffa6acf1be540`; remote SHA matched; no force-push |
+| Dedicated GitHub Actions validation | Complete for the implementation checkpoint | [Run 42128608396](https://github.com/hernon2012-eng/wyd/actions/runs/42128608396) succeeded on `ba1f521946eb566df61303d4c49ffa6acf1be540` |
 | Official privilege and gameplay policy | Blocked on authoritative specifications | Role-to-capability matrix and official commands are not documented; keep all grants disabled by default |
 | Subsequent package order | Blocked on authoritative roadmap | Reviewed repository status/contracts do not establish the order for NPC, services, and multi-character packages |
 
-Pacote 4 is **not declared fully complete or production-ready** until remote CI succeeds and the blocking policy/specification questions are resolved or explicitly accepted by the project owner.
+Pacote 4 is **not declared fully complete or production-ready**: remote CI passed, but the blocking policy/specification questions and real account/character integration remain unresolved.

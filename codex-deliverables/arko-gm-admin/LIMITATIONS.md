@@ -16,5 +16,5 @@
 
 - PostgreSQL must be a dedicated database named `arko_admin`; migrations must be applied explicitly by an operator. The service refuses other database names and performs no automatic migration.
 - Current local validation passed against disposable PostgreSQL 16, including race tests and schema/example validation.
-- The new branch has not yet been published and remote CI has not yet been run; this work remains an unpublished checkpoint until remote SHA and CI are confirmed.
+- The implementation branch is published and remote CI passed for implementation SHA `ba1f521946eb566df61303d4c49ffa6acf1be540`; the current handoff/status update is a documentation-only follow-up.
 - No independent external security audit has been performed. Production use requires review of authorization policy, secrets/credential recovery, TLS boundary, and any future data integration.
