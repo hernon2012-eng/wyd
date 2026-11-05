@@ -46,6 +46,7 @@
 - Idempotência é imutável: insert em conflito falha e não atualiza resultado anterior. Inventário e registro terminal são gravados no mesmo commit.
 - Implementada integração real com schema descartável único por teste, host/porta/banco/usuário fixos; nenhum banco WYD é usado. Adicionados casos de persistência/restart, crafting, transfer, duplicação, conflito de payload, rollback, concorrência e falha de conexão.
 - C4 de código commitado localmente em `7f74440` (`feat: harden PostgreSQL gameplay persistence`). `git push origin codex/arko-gameplay-postgres` falhou: `fatal: unable to get password from user`; não há credencial GitHub configurada.
+- CI/documentação/handoff commitados localmente em `3f046a5` (`ci: validate ARKO gameplay PostgreSQL`); branch remota continua sem publicação pela mesma limitação de autenticação.
 - Execuções locais contra PostgreSQL 16 descartável `arko_test`: `go test ./...` passou; `go test -race ./...` passou; `go vet ./...` passou; `go build ./...` passou; `test -z "$(gofmt -l .)"` passou; `python tests/validate_contracts.py` validou quatro schemas/exemplos; `git diff --check` passou.
 - O workflow dedicado `.github/workflows/arko-gameplay-postgres.yml` contém serviço PostgreSQL e o gate CI, mas ainda não foi executado no GitHub. Preservado também o workflow de CI publicado do Pacote 2.
 - Segurança: duas revisões independentes do adapter, incluindo migrações, concorrência, isolamento e alterações finais, não encontraram vulnerabilidades.
