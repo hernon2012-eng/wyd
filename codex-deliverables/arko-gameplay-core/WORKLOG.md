@@ -36,4 +36,5 @@
 - Revisão contrato/schema identificou e corrigiu `operation_id` ausente em conflito idempotente; teste regressivo adicionado.
 - `python tests/validate_contracts.py` passou. A última rodada do fuzz smoke `FuzzAddRemoveConservesQuantity` executou 42.587 casos em 2 s.
 - Após a correção de conflito, passaram `gofmt -l`, `go test ./...`, `go test -race ./...`, `go vet ./...`, `go build ./...`, validador JSON, fuzz smoke e `git diff --check`.
-- Próximo passo: commitar/publicar C3 e conferir a árvore final.
+- C3 publicado: `599c933` (`feat: add gameplay contracts and CI`) em `origin/codex/arko-gameplay-core`.
+- Conferência final da branch e estado Git registrada após o commit de metadados.
