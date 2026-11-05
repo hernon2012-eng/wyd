@@ -13,3 +13,13 @@
   de CI isolado.
 - Sem alterações nos pacotes anteriores, sem conexão ou migração de sistemas/
   bancos WYD, sem commit e sem push.
+# Worklog
+
+## 2026-11-05 — pacote publicado
+
+- Implementado catálogo Go de definições NPC v1 com recarga atômica, validação estrita do schema, referências duplicadas rejeitadas, leituras ordenadas/cópias defensivas e suporte concorrente.
+- Adicionados schema, exemplo sintético DEMONSTRAÇÃO, testes, documentação e workflow próprio.
+- Validação local: formato, testes, race, vet, build, validador JSON Schema e `git diff --check` passaram.
+- Commit `b5bdabca465e91739128f89b887b6bb49542c803` publicado na branch `codex/arko-npc-dynamic-20261105`.
+- CI `42132717429` passou nos jobs `go` e `contracts`.
+- Nenhuma regra de mundo, modelo, coordenada, spawn, IA, permissão ou comportamento foi inferida.
