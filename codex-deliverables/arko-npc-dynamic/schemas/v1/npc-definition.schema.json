@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arko.invalid/schemas/v1/npc-definition.schema.json",
+  "title": "NPC definition proposal v1",
+  "type": "object",
+  "required": ["contract_version", "definition_ref", "revision", "model_ref", "name", "location", "services", "active"],
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "definition_ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "model_ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "location": {
+      "type": "object",
+      "required": ["map_ref", "x", "y"],
+      "properties": {
+        "map_ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "x": { "type": "integer" },
+        "y": { "type": "integer" }
+      },
+      "additionalProperties": false
+    },
+    "services": { "type": "array", "uniqueItems": true, "items": { "enum": ["shop", "teleport", "crafting", "production", "quest", "arena", "administration"] } },
+    "active": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}
