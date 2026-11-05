@@ -7,10 +7,11 @@
 - Base: Pacote 3 published HEAD `1870b89d7fa4a2546c32aac87be83b5f80e3da3b`
 - Local core checkpoint commit: `712d4cab0a55253d584c7dd4a197a49231979957`
 - Published implementation checkpoint: `ba1f521946eb566df61303d4c49ffa6acf1be540`
-- Confirmed remote branch SHA: `ba1f521946eb566df61303d4c49ffa6acf1be540` (remote still points here)
-- GitHub Actions run [42128608396](https://github.com/hernon2012-eng/wyd/actions/runs/42128608396): success
+- Published report checkpoint: `7523a82a96f801d2722fd373a0cb69af3972db6e`
+- GitHub Actions run [42128608396](https://github.com/hernon2012-eng/wyd/actions/runs/42128608396): success on implementation checkpoint `ba1f521946eb566df61303d4c49ffa6acf1be540`
+- GitHub Actions run [42130267973](https://github.com/hernon2012-eng/wyd/actions/runs/42130267973): success on current HEAD
 - Local implementation and validation: complete for the safe administrative foundation.
-- Local report commit: `215624ec37ffe3f9ea3640995b044c74040cea3f`; the follow-up push was rejected by GitHub with `fatal error in commit_refs`. This commit and the subsequent push-blocker documentation change are preserved locally; current local HEAD is ahead of remote.
+- Published report commits: `215624ec37ffe3f9ea3640995b044c74040cea3f` and `7523a82a96f801d2722fd373a0cb69af3972db6e`; the latter now records that the normal push succeeded.
 
 ## Implemented
 
@@ -29,8 +30,6 @@
 
 ## Next actions
 
-1. Investigate the GitHub ref-update rejection without force push or history rewrite, then publish the preserved local report commits and confirm the new SHA.
-2. The implementation commit's CI already passed; after any successful follow-up push, inspect its run if triggered.
-3. Before starting another package, locate an authoritative package-order source. Current repository status/contracts do not define whether NPCs, services, or multi-character comes next. Keep independent work limited to safe foundations that do not invent missing behavior.
+1. Before starting another package, locate an authoritative package-order source. Current repository status/contracts do not define whether NPCs, services, or multi-character comes next. Keep independent work limited to safe foundations that do not invent missing behavior.
 
 No CI result or publication is claimed until observed.

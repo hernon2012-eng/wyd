@@ -1,6 +1,6 @@
 # Arko GM Admin
 
-**Status: implementation in progress; no production permissions or game commands are enabled.**
+**Status: safe administrative foundation implemented and published; no production permissions or game commands are enabled.**
 
 This Go module provides an isolated administrative API, a locally embedded demonstration panel, persistent identities/sessions, and append-only administrative audit records. It does not connect to or change the original WYD server, client, or databases.
 
