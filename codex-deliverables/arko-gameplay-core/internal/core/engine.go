@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -33,7 +34,7 @@ func NewEngine(repository Repository, options EngineOptions) (*Engine, error) {
 }
 
 func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (OperationResult, error) {
-	if !validRequestID(request.RequestID) || !validOperationScope(OperationScope{CharacterID: request.CharacterID, Type: OperationCraft, Key: request.IdempotencyKey}) || !validID(string(request.RecipeID)) || request.RecipeVersion == 0 {
+	if !validRequestID(request.RequestID) || !validOperationScope(OperationScope{CharacterID: request.CharacterID, Type: OperationCraft, Key: request.IdempotencyKey}) || !validID(string(request.RecipeID)) || request.RecipeVersion == 0 || request.RecipeVersion > math.MaxInt64 {
 		return OperationResult{}, ErrInvalidRequest
 	}
 	if !actorAllows(actor, request.CharacterID) {
@@ -52,7 +53,10 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 		if request.Quantity <= 0 || request.Quantity > MaxBatches {
 			return rejected(CodeInvalidRequest), nil
 		}
-		recipe, ok := tx.Recipe(request.RecipeID, request.RecipeVersion)
+		recipe, ok, err := tx.ReadRecipe(request.RecipeID, request.RecipeVersion)
+		if err != nil {
+			return OperationResult{}, err
+		}
 		if !ok {
 			return rejected(CodeRecipeNotFound), nil
 		}
@@ -74,24 +78,37 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 				return rejected(CodeRequirementsNotMet), nil
 			}
 		}
-		inventory, exists := tx.Inventory(request.CharacterID)
+		inventory, exists, err := tx.ReadInventory(request.CharacterID)
+		if err != nil {
+			return OperationResult{}, err
+		}
 		if !exists {
 			return OperationResult{}, ErrNotFound
 		}
 		definitions := make(map[ItemID]ItemDefinition)
 		for _, amount := range recipe.Materials {
-			if definition, found := tx.ItemDefinition(amount.ItemID); found {
+			definition, found, err := tx.ReadItemDefinition(amount.ItemID)
+			if err != nil {
+				return OperationResult{}, err
+			}
+			if found {
 				definitions[amount.ItemID] = definition
 			}
 		}
-		if definition, found := tx.ItemDefinition(recipe.Product.ItemID); found {
+		if definition, found, err := tx.ReadItemDefinition(recipe.Product.ItemID); err != nil {
+			return OperationResult{}, err
+		} else if found {
 			definitions[recipe.Product.ItemID] = definition
 		}
 		for _, slot := range inventory.Slots {
 			if slot.ItemID == "" {
 				continue
 			}
-			if definition, found := tx.ItemDefinition(slot.ItemID); found {
+			definition, found, err := tx.ReadItemDefinition(slot.ItemID)
+			if err != nil {
+				return OperationResult{}, err
+			}
+			if found {
 				definitions[slot.ItemID] = definition
 			}
 		}
@@ -122,11 +139,17 @@ func (e *Engine) Add(ctx context.Context, actor Actor, request AddRequest) (Oper
 		if request.Item.Quantity <= 0 {
 			return rejected(CodeInvalidRequest), nil
 		}
-		definition, ok := tx.ItemDefinition(request.Item.ItemID)
+		definition, ok, err := tx.ReadItemDefinition(request.Item.ItemID)
+		if err != nil {
+			return OperationResult{}, err
+		}
 		if !ok {
 			return rejected(CodeItemNotFound), nil
 		}
-		inventory, ok := tx.Inventory(request.CharacterID)
+		inventory, ok, err := tx.ReadInventory(request.CharacterID)
+		if err != nil {
+			return OperationResult{}, err
+		}
 		if !ok {
 			return OperationResult{}, ErrNotFound
 		}
@@ -159,10 +182,15 @@ func (e *Engine) Remove(ctx context.Context, actor Actor, request RemoveRequest)
 		if request.Item.Quantity <= 0 {
 			return rejected(CodeInvalidRequest), nil
 		}
-		if _, ok := tx.ItemDefinition(request.Item.ItemID); !ok {
+		if _, ok, err := tx.ReadItemDefinition(request.Item.ItemID); err != nil {
+			return OperationResult{}, err
+		} else if !ok {
 			return rejected(CodeItemNotFound), nil
 		}
-		inventory, ok := tx.Inventory(request.CharacterID)
+		inventory, ok, err := tx.ReadInventory(request.CharacterID)
+		if err != nil {
+			return OperationResult{}, err
+		}
 		if !ok {
 			return OperationResult{}, ErrNotFound
 		}
@@ -198,12 +226,19 @@ func (e *Engine) Transfer(ctx context.Context, actor Actor, request TransferRequ
 		if request.Item.Quantity <= 0 {
 			return rejected(CodeInvalidRequest), nil
 		}
-		definition, ok := tx.ItemDefinition(request.Item.ItemID)
+		definition, ok, err := tx.ReadItemDefinition(request.Item.ItemID)
+		if err != nil {
+			return OperationResult{}, err
+		}
 		if !ok {
 			return rejected(CodeItemNotFound), nil
 		}
-		source, sourceOK := tx.Inventory(request.Source)
-		destination, destinationOK := tx.Inventory(request.Destination)
+		inventories, err := tx.ReadInventories(request.Source, request.Destination)
+		if err != nil {
+			return OperationResult{}, err
+		}
+		source, sourceOK := inventories[request.Source]
+		destination, destinationOK := inventories[request.Destination]
 		if !sourceOK || !destinationOK {
 			return OperationResult{}, ErrNotFound
 		}
@@ -233,7 +268,11 @@ func (e *Engine) Inventory(ctx context.Context, actor Actor, characterID Charact
 	var inventory Inventory
 	err := e.repository.Transact(ctx, func(tx Transaction) error {
 		var ok bool
-		inventory, ok = tx.Inventory(characterID)
+		var readErr error
+		inventory, ok, readErr = tx.ReadInventory(characterID)
+		if readErr != nil {
+			return readErr
+		}
 		if !ok {
 			return ErrNotFound
 		}
@@ -245,7 +284,11 @@ func (e *Engine) Inventory(ctx context.Context, actor Actor, characterID Charact
 func (e *Engine) execute(ctx context.Context, scope OperationScope, requestID, requestFingerprint string, apply func(Transaction) (OperationResult, error)) (OperationResult, error) {
 	var result OperationResult
 	err := e.repository.Transact(ctx, func(tx Transaction) error {
-		if previous, exists := tx.Operation(scope); exists {
+		previous, exists, readErr := tx.ReadOperation(scope)
+		if readErr != nil {
+			return readErr
+		}
+		if exists {
 			if previous.Fingerprint != requestFingerprint {
 				return ErrIdempotencyConflict
 			}

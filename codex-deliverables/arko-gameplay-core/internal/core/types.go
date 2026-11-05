@@ -27,6 +27,7 @@ var (
 	ErrNotFound            = errors.New("not found")
 	ErrIdempotencyConflict = errors.New("idempotency key conflict")
 	ErrStorage             = errors.New("storage failure")
+	ErrRetryableStorage    = errors.New("retryable storage failure")
 	ErrCapacity            = errors.New("storage capacity reached")
 )
 

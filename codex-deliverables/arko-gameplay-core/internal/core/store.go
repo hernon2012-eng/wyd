@@ -11,6 +11,11 @@ type Transaction interface {
 	Recipe(RecipeID, uint64) (Recipe, bool)
 	Inventory(CharacterID) (Inventory, bool)
 	Operation(OperationScope) (OperationRecord, bool)
+	ReadItemDefinition(ItemID) (ItemDefinition, bool, error)
+	ReadRecipe(RecipeID, uint64) (Recipe, bool, error)
+	ReadInventory(CharacterID) (Inventory, bool, error)
+	ReadInventories(...CharacterID) (map[CharacterID]Inventory, error)
+	ReadOperation(OperationScope) (OperationRecord, bool, error)
 	PutInventory(Inventory) error
 	PutOperation(OperationRecord) error
 }
@@ -126,6 +131,7 @@ func (s *MemoryStore) Transact(ctx context.Context, apply func(Transaction) erro
 	}
 	tx := &memoryTransaction{
 		store:       s,
+		ctx:         ctx,
 		definitions: cloneDefinitions(s.definitions),
 		recipes:     cloneRecipes(s.recipes),
 		inventories: cloneInventories(s.inventories),
@@ -157,30 +163,77 @@ func (s *MemoryStore) failLocked(point string) error {
 
 type memoryTransaction struct {
 	store       *MemoryStore
+	ctx         context.Context
 	definitions map[ItemID]ItemDefinition
 	recipes     map[recipeKey]Recipe
 	inventories map[CharacterID]Inventory
 	operations  map[scopeKey]OperationRecord
 }
 
-func (tx *memoryTransaction) ItemDefinition(id ItemID) (ItemDefinition, bool) {
+func (tx *memoryTransaction) ReadItemDefinition(id ItemID) (ItemDefinition, bool, error) {
+	if err := tx.ctx.Err(); err != nil {
+		return ItemDefinition{}, false, err
+	}
 	definition, ok := tx.definitions[id]
+	return definition, ok, nil
+}
+
+func (tx *memoryTransaction) ReadRecipe(id RecipeID, version uint64) (Recipe, bool, error) {
+	if err := tx.ctx.Err(); err != nil {
+		return Recipe{}, false, err
+	}
+	recipe, ok := tx.recipes[recipeKey{id: id, version: version}]
+	return cloneRecipe(recipe), ok, nil
+}
+
+func (tx *memoryTransaction) ReadInventory(id CharacterID) (Inventory, bool, error) {
+	inventories, err := tx.ReadInventories(id)
+	if err != nil {
+		return Inventory{}, false, err
+	}
+	inventory, ok := inventories[id]
+	return inventory, ok, nil
+}
+
+func (tx *memoryTransaction) ReadInventories(ids ...CharacterID) (map[CharacterID]Inventory, error) {
+	if err := tx.ctx.Err(); err != nil {
+		return nil, err
+	}
+	inventories := make(map[CharacterID]Inventory, len(ids))
+	for _, id := range ids {
+		if inventory, ok := tx.inventories[id]; ok {
+			inventories[id] = cloneInventory(inventory)
+		}
+	}
+	return inventories, nil
+}
+
+func (tx *memoryTransaction) ReadOperation(scope OperationScope) (OperationRecord, bool, error) {
+	if err := tx.ctx.Err(); err != nil {
+		return OperationRecord{}, false, err
+	}
+	record, ok := tx.operations[toScopeKey(scope)]
+	return cloneOperationRecord(record), ok, nil
+}
+
+func (tx *memoryTransaction) ItemDefinition(id ItemID) (ItemDefinition, bool) {
+	definition, ok, _ := tx.ReadItemDefinition(id)
 	return definition, ok
 }
 
 func (tx *memoryTransaction) Recipe(id RecipeID, version uint64) (Recipe, bool) {
-	recipe, ok := tx.recipes[recipeKey{id: id, version: version}]
-	return cloneRecipe(recipe), ok
+	recipe, ok, _ := tx.ReadRecipe(id, version)
+	return recipe, ok
 }
 
 func (tx *memoryTransaction) Inventory(id CharacterID) (Inventory, bool) {
-	inventory, ok := tx.inventories[id]
-	return cloneInventory(inventory), ok
+	inventory, ok, _ := tx.ReadInventory(id)
+	return inventory, ok
 }
 
 func (tx *memoryTransaction) Operation(scope OperationScope) (OperationRecord, bool) {
-	record, ok := tx.operations[toScopeKey(scope)]
-	return cloneOperationRecord(record), ok
+	record, ok, _ := tx.ReadOperation(scope)
+	return record, ok
 }
 
 func (tx *memoryTransaction) PutInventory(inventory Inventory) error {
@@ -192,11 +245,14 @@ func (tx *memoryTransaction) PutInventory(inventory Inventory) error {
 }
 
 func (tx *memoryTransaction) PutOperation(record OperationRecord) error {
-	if !validOperationScope(record.Scope) || record.Fingerprint == "" || (record.Result.Status != OperationCompleted && record.Result.Status != OperationRejected) {
-		return ErrInvalidRequest
+	if err := ValidateOperationRecord(record); err != nil {
+		return err
 	}
 	key := toScopeKey(record.Scope)
-	if _, exists := tx.operations[key]; !exists && len(tx.operations) >= tx.store.maxOperations {
+	if _, exists := tx.operations[key]; exists {
+		return ErrIdempotencyConflict
+	}
+	if len(tx.operations) >= tx.store.maxOperations {
 		return ErrCapacity
 	}
 	tx.operations[key] = cloneOperationRecord(record)
@@ -210,6 +266,18 @@ func toScopeKey(scope OperationScope) scopeKey {
 func validOperationScope(scope OperationScope) bool {
 	validType := scope.Type == OperationCraft || scope.Type == OperationAdd || scope.Type == OperationRemove || scope.Type == OperationTransfer
 	return validID(string(scope.CharacterID)) && validID(string(scope.Key)) && validType
+}
+
+func ValidateOperationRecord(record OperationRecord) error {
+	if !validOperationScope(record.Scope) ||
+		record.Fingerprint == "" ||
+		!validRequestID(record.RequestID) ||
+		!validID(record.Result.OperationID) ||
+		record.Result.RequestID != record.RequestID ||
+		(record.Result.Status != OperationCompleted && record.Result.Status != OperationRejected) {
+		return ErrInvalidRequest
+	}
+	return nil
 }
 
 func cloneDefinitions(source map[ItemID]ItemDefinition) map[ItemID]ItemDefinition {

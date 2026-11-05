@@ -188,6 +188,20 @@ func validDefinition(definition ItemDefinition) bool {
 	return validID(string(definition.ID)) && definition.MaxStack > 0 && definition.Name != "" && len(definition.Name) <= 128 && (definition.Kind == ItemKindGeneric || definition.Kind == ItemKindMaterial || definition.Kind == ItemKindEquipment)
 }
 
+func ValidateDefinition(definition ItemDefinition) error {
+	if !validDefinition(definition) {
+		return ErrInvalidRequest
+	}
+	return nil
+}
+
+func ValidateRecipe(recipe Recipe) error {
+	if !validRecipe(recipe) {
+		return ErrInvalidRequest
+	}
+	return nil
+}
+
 func validInventoryShape(inventory Inventory) bool {
 	if !validID(string(inventory.CharacterID)) || len(inventory.Slots) > 10000 {
 		return false
@@ -207,7 +221,7 @@ func validInventoryShape(inventory Inventory) bool {
 }
 
 func validRecipe(recipe Recipe) bool {
-	if !validID(string(recipe.ID)) || recipe.Version == 0 || strings.TrimSpace(recipe.Name) == "" || len(recipe.Name) > 128 || len(recipe.Materials) == 0 || len(recipe.Materials) > MaxRecipeMaterials || len(recipe.Requirements) > MaxRecipeMaterials {
+	if !validID(string(recipe.ID)) || recipe.Version == 0 || recipe.Version > math.MaxInt64 || strings.TrimSpace(recipe.Name) == "" || len(recipe.Name) > 128 || len(recipe.Materials) == 0 || len(recipe.Materials) > MaxRecipeMaterials || len(recipe.Requirements) > MaxRecipeMaterials {
 		return false
 	}
 	if !validID(string(recipe.Product.ItemID)) || recipe.Product.Quantity <= 0 {
