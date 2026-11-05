@@ -1,6 +1,6 @@
 # Worklog
 
-**Current state:** Pacote 4 administrative foundation is implemented on `codex/arko-gm-admin-20261105`, based on Pacote 3 HEAD `1870b89d7fa4a2546c32aac87be83b5f80e3da3b`. Core checkpoint commit: `712d4cab0a55253d584c7dd4a197a49231979957`. API/panel checkpoint `ba1f521946eb566df61303d4c49ffa6acf1be540` was published and passed GitHub Actions run [42128608396](https://github.com/hernon2012-eng/wyd/actions/runs/42128608396).
+**Current state:** Pacote 4 administrative foundation is implemented on `codex/arko-gm-admin-20261105`, based on Pacote 3 HEAD `1870b89d7fa4a2546c32aac87be83b5f80e3da3b`. Core checkpoint `712d4cab0a55253d584c7dd4a197a49231979957` and API/panel checkpoint `ba1f521946eb566df61303d4c49ffa6acf1be540` are published; the latter passed GitHub Actions run [42128608396](https://github.com/hernon2012-eng/wyd/actions/runs/42128608396). Final report commit `215624ec37ffe3f9ea3640995b044c74040cea3f` and this push-blocker record remain local because GitHub rejected the ref update.
 
 ## Completed locally
 
@@ -28,8 +28,10 @@ Executed from `codex-deliverables/arko-gm-admin/` against a disposable PostgreSQ
 
 The branch SHA was verified remotely as `ba1f521946eb566df61303d4c49ffa6acf1be540`, equal to local HEAD at the time of the successful run.
 
+A later push of the report update was rejected with `remote: fatal error in commit_refs`. The remote branch remains at `ba1f521946eb566df61303d4c49ffa6acf1be540`; local report commits are preserved and must not be discarded. GitHub reports the branch unprotected and authentication is valid.
+
 ## Pending
 
-- Record any documentation-only follow-up commit and its remote SHA after pushing.
+- Resolve the GitHub `commit_refs` rejection, then push the preserved local report commits normally and confirm the remote SHA.
 - Obtain official role/capability, audit visibility, account-data, and GM-command specifications before enabling any non-demo access or action.
 - Establish the official package order before starting another package. The reviewed status/contracts do not declare a sequence for NPC, services, or multi-character work.
