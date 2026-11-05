@@ -1,0 +1,32 @@
+{
+  "catalog_version": "1.0.0",
+  "descriptors": [
+    {
+      "contract_version": "1.0.0",
+      "service_ref": "demo.shop",
+      "revision": 1,
+      "service_type": "shop",
+      "references": ["demo.vendor.alpha"],
+      "demo_label": "DEMONSTRAÇÃO",
+      "demo_only": true
+    },
+    {
+      "contract_version": "1.0.0",
+      "service_ref": "demo.crafting",
+      "revision": 1,
+      "service_type": "crafting",
+      "references": [],
+      "demo_label": "DEMONSTRAÇÃO",
+      "demo_only": true
+    },
+    {
+      "contract_version": "1.0.0",
+      "service_ref": "demo.admin",
+      "revision": 1,
+      "service_type": "administration",
+      "references": ["demo.audit.placeholder"],
+      "demo_label": "DEMONSTRAÇÃO",
+      "demo_only": true
+    }
+  ]
+}

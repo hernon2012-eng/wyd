@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arko.invalid/schemas/v1/service-catalog.schema.json",
+  "title": "ARKO service catalog v1",
+  "type": "object",
+  "required": ["catalog_version", "descriptors"],
+  "properties": {
+    "catalog_version": { "const": "1.0.0" },
+    "descriptors": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/descriptor" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*([._/-][a-z0-9]+)*$"
+    },
+    "descriptor": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "service_ref",
+        "revision",
+        "service_type",
+        "references",
+        "demo_label",
+        "demo_only"
+      ],
+      "properties": {
+        "contract_version": { "const": "1.0.0" },
+        "service_ref": { "$ref": "#/$defs/ref" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "service_type": {
+          "enum": [
+            "shop",
+            "teleport",
+            "crafting",
+            "production",
+            "quest",
+            "arena",
+            "administration"
+          ]
+        },
+        "references": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/ref" }
+        },
+        "demo_label": { "const": "DEMONSTRAÇÃO" },
+        "demo_only": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  }
+}
