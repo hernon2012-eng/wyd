@@ -1,0 +1,34 @@
+[
+  {
+    "contract_version": "1.0.0",
+    "account_ref": "DEMONSTRAÇÃO-conta-001",
+    "characters": [
+      {
+        "character_ref": "DEMONSTRAÇÃO-personagem-arch",
+        "progression": "Arch",
+        "revision": 0
+      },
+      {
+        "character_ref": "DEMONSTRAÇÃO-personagem-mortal",
+        "progression": "Mortal",
+        "revision": 2
+      },
+      {
+        "character_ref": "DEMONSTRAÇÃO-personagem-celestial",
+        "progression": "Celestial",
+        "revision": 5
+      },
+      {
+        "character_ref": "DEMONSTRAÇÃO-personagem-celestialcs",
+        "progression": "CelestialCS",
+        "revision": 1
+      },
+      {
+        "character_ref": "DEMONSTRAÇÃO-personagem-scelestial",
+        "progression": "SCelestial",
+        "revision": 3
+      }
+    ],
+    "active_sessions": 0
+  }
+]
