@@ -10,3 +10,11 @@
 - Validação do checkpoint documental: `git diff --check` e presença dos nove documentos obrigatórios + `go.mod` passaram. Testes Go não aplicáveis ainda: nenhum pacote de código foi criado neste estágio.
 - Não há acesso a servidor/banco/cliente local nem a catálogo oficial; IDs e receitas reais não serão inferidos.
 - Próximo checkpoint: commitar/publicar os documentos-base e implementar o planejador de inventário e as transações.
+
+## 2026-11-05 — Modelos e operações puras
+
+- C0 publicado: `ca207be` (`docs: bootstrap ARKO gameplay core`) em `origin/codex/arko-gameplay-core`.
+- Implementados modelos genéricos, validação de slots/stacks, adição, remoção, transferência atômica em memória e planejamento puro de fabricação com agregação determinística e overflow checks.
+- Testes cobrindo rollback local de add/transfer, ordem de consumo, slots liberados, agregação de ingredientes e fuzz de conservação em add.
+- Validação executada: `gofmt -w internal/core && go test ./...` passou.
+- Limite desta etapa: ainda não há serviço de crafting, repositório transacional ou idempotência.
