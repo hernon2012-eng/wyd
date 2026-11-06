@@ -51,6 +51,6 @@ The following refs were published after the original inventory snapshot; they su
 | Branch | Remote HEAD | Evidence |
 |---|---|---|
 | `codex/arko-integration-readiness-20261106` | `3ffee2237ae92553227c422ee41822360e90721d` | CI run [42140678882](https://github.com/hernon2012-eng/wyd/actions/runs/42140678882) passed, including Windows PowerShell manifest tests and JSON validator tests. |
-| `codex/arko-recipes-v2-20261106` | `7c201921a40b9c318f62c049ab93692b11b5e986` | P07 code is in `982f392`; package CI runs [42140894829](https://github.com/hernon2012-eng/wyd/actions/runs/42140894829) and [42140894804](https://github.com/hernon2012-eng/wyd/actions/runs/42140894804) passed at `d0fc252`. CI for the docs-only HEAD `7c20192` must be checked before using it as current validation evidence. |
+| `codex/arko-recipes-v2-20261106` | `7c201921a40b9c318f62c049ab93692b11b5e986` | P07 code is in `982f392`; CI runs [42141098489](https://github.com/hernon2012-eng/wyd/actions/runs/42141098489) (Gameplay Core) and [42141098492](https://github.com/hernon2012-eng/wyd/actions/runs/42141098492) (PostgreSQL) passed at this exact HEAD. Earlier runs [42140894829](https://github.com/hernon2012-eng/wyd/actions/runs/42140894829) and [42140894804](https://github.com/hernon2012-eng/wyd/actions/runs/42140894804) also passed at `d0fc252`. |
 
 These are separate branches; no merge or real WYD integration is implied.
