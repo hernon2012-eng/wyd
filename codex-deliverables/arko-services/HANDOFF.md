@@ -32,3 +32,6 @@ Run `test -z "$(gofmt -l .)"`, `go test ./...`, `go test -race ./...`, `go vet .
 - Branch: `codex/arko-services-20261105`, based on Pacote 3 HEAD `1870b89d7fa4a2546c32aac87be83b5f80e3da3b`.
 - Implementation commit: `c3155721dc1cf36997474f42c18be08eb0574a99`.
 - CI: [run 42133133330](https://github.com/hernon2012-eng/wyd/actions/runs/42133133330) passed the Go and contracts jobs.
+- Published report checkpoint: `44037fb8af85e0287c42b61831054cf56ac5f98b`; CI
+  [42133218945](https://github.com/hernon2012-eng/wyd/actions/runs/42133218945)
+  passed on that checkpoint.
