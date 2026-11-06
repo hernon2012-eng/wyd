@@ -31,4 +31,4 @@ The branch SHA was verified remotely as `7523a82a96f801d2722fd373a0cb69af3972db6
 ## Pending
 
 - Obtain official role/capability, audit visibility, account-data, and GM-command specifications before enabling any non-demo access or action.
-- Establish the official package order before starting another package. The reviewed status/contracts do not declare a sequence for NPC, services, or multi-character work.
+- The user approved choosing the order; NPCs, services, and multi-character contract/catalog foundations were then implemented in that sequence on separate branches.

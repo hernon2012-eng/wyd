@@ -4,7 +4,7 @@
 
 - The role names `player`, `moderator`, and `admin` are known, but official capability grants and audit-history visibility are not specified. All runnable-service grants therefore default to none.
 - No official GM command names, arguments, effects, or confirmation policy are available. The HTTP command endpoint is preview-only and the runnable service registers no commands.
-- Repository status and reviewed contracts do not establish the official order of subsequent NPC, service, or multi-character packages. Do not select or start one based on assumption.
+- The source contracts do not prescribe an official order for NPC, service, or multi-character work. The user authorized selecting one; NPCs → services → multi-character contract/catalog foundations were implemented on separate branches. This choice does not establish a canonical product roadmap.
 
 ## Integration deliberately not implemented
 
