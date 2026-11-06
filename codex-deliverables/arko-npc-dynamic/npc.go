@@ -1,5 +1,5 @@
-// Package npc provides an in-memory, read-only query interface over validated
-// versioned NPC definition metadata.
+// Package npc provides an in-memory catalog for validated, versioned NPC
+// definition metadata.
 package npc
 
 import (
@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"os"
 	"sort"
+	"sync"
 	"sync/atomic"
 	"unicode/utf8"
 )
@@ -52,11 +53,22 @@ type Location struct {
 
 type catalogSnapshot struct {
 	definitions map[string]Definition
+	history     map[string][]RevisionRecord
+	published   map[string]int64
 }
 
-// Catalog atomically replaces complete definition sets. Its zero value is
-// ready for use. Do not copy a Catalog after first use.
+// RevisionRecord is an immutable catalog history entry. Published reports
+// whether this revision has ever been published in this catalog's lifetime.
+type RevisionRecord struct {
+	Definition Definition
+	Published  bool
+}
+
+// Catalog atomically manages validated definitions and their in-memory
+// revision history. Its zero value is ready for use. Do not copy a Catalog
+// after first use.
 type Catalog struct {
+	mu      sync.Mutex
 	current atomic.Pointer[catalogSnapshot]
 }
 
@@ -153,7 +165,17 @@ func (c *Catalog) Replace(definitions []Definition) error {
 		}
 		next[definition.DefinitionRef] = cloneDefinition(definition)
 	}
-	c.current.Store(&catalogSnapshot{definitions: next})
+	history := make(map[string][]RevisionRecord, len(next))
+	for ref, definition := range next {
+		history[ref] = []RevisionRecord{{Definition: cloneDefinition(definition)}}
+	}
+	c.mu.Lock()
+	c.current.Store(&catalogSnapshot{
+		definitions: next,
+		history:     history,
+		published:   make(map[string]int64),
+	})
+	c.mu.Unlock()
 	return nil
 }
 
@@ -183,11 +205,351 @@ func (c *Catalog) Len() int {
 	return len(c.snapshot().definitions)
 }
 
+// Create adds a new definition as revision 1. A definition reference already
+// present in the catalog is rejected.
+func (c *Catalog) Create(definition Definition) error {
+	if definition.Revision != 1 {
+		return errors.New("new definition revision must be 1")
+	}
+	if err := definition.Validate(); err != nil {
+		return err
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	if _, exists := current.definitions[definition.DefinitionRef]; exists {
+		return fmt.Errorf("definition_ref %q already exists", definition.DefinitionRef)
+	}
+	next := cloneSnapshot(current)
+	definition = cloneDefinition(definition)
+	next.definitions[definition.DefinitionRef] = definition
+	next.history[definition.DefinitionRef] = []RevisionRecord{{Definition: cloneDefinition(definition)}}
+	c.current.Store(next)
+	return nil
+}
+
+// CreateJSON strictly decodes one definition and adds it as revision 1.
+func (c *Catalog) CreateJSON(data []byte) error {
+	definition, err := decodeDefinition(data)
+	if err != nil {
+		return err
+	}
+	return c.Create(definition)
+}
+
+// Duplicate copies an existing definition under newRef as revision 1. All
+// metadata, including active state and service labels, is copied.
+func (c *Catalog) Duplicate(sourceRef, newRef string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	source, exists := current.definitions[sourceRef]
+	if !exists {
+		return fmt.Errorf("definition_ref %q not found", sourceRef)
+	}
+	if _, exists := current.definitions[newRef]; exists {
+		return fmt.Errorf("definition_ref %q already exists", newRef)
+	}
+	duplicate := cloneDefinition(source)
+	duplicate.DefinitionRef = newRef
+	duplicate.Revision = 1
+	if err := duplicate.Validate(); err != nil {
+		return err
+	}
+	next := cloneSnapshot(current)
+	next.definitions[newRef] = duplicate
+	next.history[newRef] = []RevisionRecord{{Definition: cloneDefinition(duplicate)}}
+	c.current.Store(next)
+	return nil
+}
+
+// Update replaces a definition's metadata and records a new revision. The
+// supplied revision is ignored; the catalog assigns the next revision.
+func (c *Catalog) Update(ref string, definition Definition) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	old, exists := current.definitions[ref]
+	if !exists {
+		return fmt.Errorf("definition_ref %q not found", ref)
+	}
+	if definition.DefinitionRef != ref {
+		return fmt.Errorf("updated definition_ref must remain %q", ref)
+	}
+	revision, err := nextRevision(old.Revision)
+	if err != nil {
+		return err
+	}
+	definition.Revision = revision
+	if err := definition.Validate(); err != nil {
+		return err
+	}
+	next := cloneSnapshot(current)
+	appendRevision(next, definition)
+	c.current.Store(next)
+	return nil
+}
+
+// UpdateJSON strictly decodes one definition and records it as a new revision.
+func (c *Catalog) UpdateJSON(ref string, data []byte) error {
+	definition, err := decodeDefinition(data)
+	if err != nil {
+		return err
+	}
+	return c.Update(ref, definition)
+}
+
+// Activate records a revision with active=true. It is a no-op if already active.
+func (c *Catalog) Activate(ref string) error {
+	return c.setActive(ref, true)
+}
+
+// Deactivate records a revision with active=false. It is a no-op if already inactive.
+func (c *Catalog) Deactivate(ref string) error {
+	return c.setActive(ref, false)
+}
+
+func (c *Catalog) setActive(ref string, active bool) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	definition, exists := current.definitions[ref]
+	if !exists {
+		return fmt.Errorf("definition_ref %q not found", ref)
+	}
+	if definition.Active == active {
+		return nil
+	}
+	revision, err := nextRevision(definition.Revision)
+	if err != nil {
+		return err
+	}
+	definition.Active = active
+	definition.Revision = revision
+	next := cloneSnapshot(current)
+	appendRevision(next, definition)
+	c.current.Store(next)
+	return nil
+}
+
+// Publish marks the current revision as the catalog's published version.
+func (c *Catalog) Publish(ref string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	definition, exists := current.definitions[ref]
+	if !exists {
+		return fmt.Errorf("definition_ref %q not found", ref)
+	}
+	next := cloneSnapshot(current)
+	next.published[ref] = definition.Revision
+	markPublished(next.history[ref], definition.Revision)
+	c.current.Store(next)
+	return nil
+}
+
+// Unpublish removes the published pointer for ref without changing its
+// definition or revision history.
+func (c *Catalog) Unpublish(ref string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	if _, exists := current.definitions[ref]; !exists {
+		return fmt.Errorf("definition_ref %q not found", ref)
+	}
+	if _, published := current.published[ref]; !published {
+		return nil
+	}
+	next := cloneSnapshot(current)
+	delete(next.published, ref)
+	c.current.Store(next)
+	return nil
+}
+
+// Published returns the definition currently published for ref.
+func (c *Catalog) Published(ref string) (Definition, bool) {
+	snapshot := c.snapshot()
+	revision, exists := snapshot.published[ref]
+	if !exists {
+		return Definition{}, false
+	}
+	for _, entry := range snapshot.history[ref] {
+		if entry.Definition.Revision == revision {
+			return cloneDefinition(entry.Definition), true
+		}
+	}
+	return Definition{}, false
+}
+
+// Rollback restores metadata from a historical revision as a new revision and
+// immediately publishes that new revision. History is never deleted.
+func (c *Catalog) Rollback(ref string, revision int64) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	definition, exists := current.definitions[ref]
+	if !exists {
+		return fmt.Errorf("definition_ref %q not found", ref)
+	}
+	var restored Definition
+	found := false
+	for _, entry := range current.history[ref] {
+		if entry.Definition.Revision == revision {
+			restored = cloneDefinition(entry.Definition)
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("revision %d for definition_ref %q not found", revision, ref)
+	}
+	nextRev, err := nextRevision(definition.Revision)
+	if err != nil {
+		return err
+	}
+	restored.Revision = nextRev
+	next := cloneSnapshot(current)
+	appendRevision(next, restored)
+	next.published[ref] = nextRev
+	markPublished(next.history[ref], nextRev)
+	c.current.Store(next)
+	return nil
+}
+
+// History returns defensive copies of all retained revisions, oldest first.
+func (c *Catalog) History(ref string) []RevisionRecord {
+	entries := c.snapshot().history[ref]
+	result := make([]RevisionRecord, len(entries))
+	for i, entry := range entries {
+		result[i] = RevisionRecord{
+			Definition: cloneDefinition(entry.Definition),
+			Published:  entry.Published,
+		}
+	}
+	return result
+}
+
+// ReferenceChecker reports whether a definition is referenced by tracked
+// metadata. Implementations must return an error when reference status cannot
+// be established.
+type ReferenceChecker interface {
+	IsReferenced(definitionRef string) (bool, error)
+}
+
+// ReferenceCheckFunc adapts a function to ReferenceChecker.
+type ReferenceCheckFunc func(definitionRef string) (bool, error)
+
+func (f ReferenceCheckFunc) IsReferenced(definitionRef string) (bool, error) {
+	return f(definitionRef)
+}
+
+// Remove deletes an unpublished definition only when a non-nil reference
+// checker confirms it is not referenced. Missing or failing checks fail closed.
+func (c *Catalog) Remove(ref string, checker ReferenceChecker) error {
+	if checker == nil {
+		return errors.New("reference checker is required to remove a definition")
+	}
+	if functionChecker, ok := checker.(ReferenceCheckFunc); ok && functionChecker == nil {
+		return errors.New("reference checker function is nil")
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	current := c.snapshot()
+	if _, exists := current.definitions[ref]; !exists {
+		return fmt.Errorf("definition_ref %q not found", ref)
+	}
+	if _, published := current.published[ref]; published {
+		return fmt.Errorf("definition_ref %q is published; unpublish it before removal", ref)
+	}
+	referenced, err := checker.IsReferenced(ref)
+	if err != nil {
+		return fmt.Errorf("check references for %q: %w", ref, err)
+	}
+	if referenced {
+		return fmt.Errorf("definition_ref %q is referenced", ref)
+	}
+	next := cloneSnapshot(current)
+	delete(next.definitions, ref)
+	delete(next.history, ref)
+	c.current.Store(next)
+	return nil
+}
+
 func (c *Catalog) snapshot() *catalogSnapshot {
 	if snapshot := c.current.Load(); snapshot != nil {
 		return snapshot
 	}
-	return &catalogSnapshot{definitions: map[string]Definition{}}
+	return &catalogSnapshot{
+		definitions: map[string]Definition{},
+		history:     map[string][]RevisionRecord{},
+		published:   map[string]int64{},
+	}
+}
+
+func decodeDefinition(data []byte) (Definition, error) {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	var wire definitionWire
+	if err := decoder.Decode(&wire); err != nil {
+		return Definition{}, fmt.Errorf("decode NPC definition: %w", err)
+	}
+	if err := ensureJSONEOF(decoder); err != nil {
+		return Definition{}, fmt.Errorf("decode NPC definition: %w", err)
+	}
+	definition, err := wire.definition()
+	if err != nil {
+		return Definition{}, err
+	}
+	return definition, nil
+}
+
+func cloneSnapshot(snapshot *catalogSnapshot) *catalogSnapshot {
+	next := &catalogSnapshot{
+		definitions: make(map[string]Definition, len(snapshot.definitions)),
+		history:     make(map[string][]RevisionRecord, len(snapshot.history)),
+		published:   make(map[string]int64, len(snapshot.published)),
+	}
+	for ref, definition := range snapshot.definitions {
+		next.definitions[ref] = cloneDefinition(definition)
+	}
+	for ref, entries := range snapshot.history {
+		copied := make([]RevisionRecord, len(entries))
+		for i, entry := range entries {
+			copied[i] = RevisionRecord{
+				Definition: cloneDefinition(entry.Definition),
+				Published:  entry.Published,
+			}
+		}
+		next.history[ref] = copied
+	}
+	for ref, revision := range snapshot.published {
+		next.published[ref] = revision
+	}
+	return next
+}
+
+func appendRevision(snapshot *catalogSnapshot, definition Definition) {
+	definition = cloneDefinition(definition)
+	snapshot.definitions[definition.DefinitionRef] = definition
+	snapshot.history[definition.DefinitionRef] = append(
+		snapshot.history[definition.DefinitionRef],
+		RevisionRecord{Definition: cloneDefinition(definition)},
+	)
+}
+
+func markPublished(entries []RevisionRecord, revision int64) {
+	for i := range entries {
+		if entries[i].Definition.Revision == revision {
+			entries[i].Published = true
+		}
+	}
+}
+
+func nextRevision(current int64) (int64, error) {
+	if current == int64(^uint64(0)>>1) {
+		return 0, errors.New("revision cannot be incremented beyond int64")
+	}
+	return current + 1, nil
 }
 
 func (w definitionWire) definition() (Definition, error) {

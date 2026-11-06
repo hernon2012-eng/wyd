@@ -1,7 +1,9 @@
 package npc
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -151,6 +153,192 @@ func TestReplaceRejectsDuplicateIDsAndInvalidDefinition(t *testing.T) {
 	first.Services = nil
 	if err := catalog.Replace([]Definition{first}); err == nil {
 		t.Fatal("Replace() accepted nil services")
+	}
+}
+
+func TestCRUDDuplicationEditsActivationPublicationAndRollback(t *testing.T) {
+	var catalog Catalog
+	created := testDefinition("demo:catalog-a", 1)
+	created.Services = []Service{ServiceShop, ServiceQuest, ServiceCrafting}
+	if err := catalog.Create(created); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if err := catalog.Create(created); err == nil {
+		t.Fatal("Create() accepted a duplicate definition_ref")
+	}
+
+	if err := catalog.Duplicate("demo:catalog-a", "demo:catalog-copy"); err != nil {
+		t.Fatalf("Duplicate() error = %v", err)
+	}
+	duplicate, ok := catalog.Lookup("demo:catalog-copy")
+	if !ok || duplicate.Revision != 1 || duplicate.Active ||
+		len(duplicate.Services) != 3 || duplicate.Services[1] != ServiceQuest {
+		t.Fatalf("Duplicate() did not preserve metadata: %#v, found=%v", duplicate, ok)
+	}
+
+	updated, _ := catalog.Lookup("demo:catalog-a")
+	updated.Location.X = 42
+	updated.Location.Y = -17
+	updated.ModelRef = "demo:alternate-model"
+	if err := catalog.Update("demo:catalog-a", updated); err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+	if err := catalog.Activate("demo:catalog-a"); err != nil {
+		t.Fatalf("Activate() error = %v", err)
+	}
+	if err := catalog.Activate("demo:catalog-a"); err != nil {
+		t.Fatalf("idempotent Activate() error = %v", err)
+	}
+	if err := catalog.Publish("demo:catalog-a"); err != nil {
+		t.Fatalf("Publish() error = %v", err)
+	}
+	published, ok := catalog.Published("demo:catalog-a")
+	if !ok || published.Revision != 3 || !published.Active ||
+		published.Location.X != 42 || published.ModelRef != "demo:alternate-model" {
+		t.Fatalf("Published() returned unexpected definition: %#v, found=%v", published, ok)
+	}
+	if err := catalog.Deactivate("demo:catalog-a"); err != nil {
+		t.Fatalf("Deactivate() error = %v", err)
+	}
+	if err := catalog.Rollback("demo:catalog-a", 2); err != nil {
+		t.Fatalf("Rollback() error = %v", err)
+	}
+	rolledBack, ok := catalog.Lookup("demo:catalog-a")
+	if !ok || rolledBack.Revision != 5 || rolledBack.Active ||
+		rolledBack.Location.X != 42 || rolledBack.ModelRef != "demo:alternate-model" {
+		t.Fatalf("Rollback() did not create restored revision: %#v, found=%v", rolledBack, ok)
+	}
+	published, ok = catalog.Published("demo:catalog-a")
+	if !ok || published.Revision != 5 {
+		t.Fatalf("Rollback() did not publish restored revision: %#v, found=%v", published, ok)
+	}
+	history := catalog.History("demo:catalog-a")
+	if len(history) != 5 {
+		t.Fatalf("History() returned %d revisions, want 5", len(history))
+	}
+	for i, entry := range history {
+		if entry.Definition.Revision != int64(i+1) {
+			t.Fatalf("history[%d] revision = %d, want %d", i, entry.Definition.Revision, i+1)
+		}
+	}
+	if !history[2].Published || !history[4].Published {
+		t.Fatalf("published revision history markers missing: %#v", history)
+	}
+	history[0].Definition.Services[0] = ServiceArena
+	originalHistory := catalog.History("demo:catalog-a")
+	if originalHistory[0].Definition.Services[0] != ServiceShop {
+		t.Fatal("History() exposed mutable catalog state")
+	}
+}
+
+func TestRemovalRequiresReferenceCheckAndFailsClosed(t *testing.T) {
+	var catalog Catalog
+	if err := catalog.Create(testDefinition("demo:remove-me", 1)); err != nil {
+		t.Fatal(err)
+	}
+	if err := catalog.Remove("demo:remove-me", nil); err == nil {
+		t.Fatal("Remove() without a checker unexpectedly succeeded")
+	}
+	var nilChecker ReferenceCheckFunc
+	if err := catalog.Remove("demo:remove-me", nilChecker); err == nil ||
+		err.Error() != "reference checker function is nil" {
+		t.Fatalf("Remove() with typed-nil checker error = %v, want explicit nil-function error", err)
+	}
+	if _, ok := catalog.Lookup("demo:remove-me"); !ok {
+		t.Fatal("typed-nil checker removal changed the catalog")
+	}
+	checkFailed := errors.New("reference store unavailable")
+	if err := catalog.Remove("demo:remove-me", ReferenceCheckFunc(func(string) (bool, error) {
+		return false, checkFailed
+	})); !errors.Is(err, checkFailed) {
+		t.Fatalf("Remove() error = %v, want wrapped reference check error", err)
+	}
+	if err := catalog.Remove("demo:remove-me", ReferenceCheckFunc(func(string) (bool, error) {
+		return true, nil
+	})); err == nil {
+		t.Fatal("Remove() deleted a referenced definition")
+	}
+	if _, ok := catalog.Lookup("demo:remove-me"); !ok {
+		t.Fatal("failed removal changed the catalog")
+	}
+	if err := catalog.Publish("demo:remove-me"); err != nil {
+		t.Fatal(err)
+	}
+	if err := catalog.Remove("demo:remove-me", ReferenceCheckFunc(func(string) (bool, error) {
+		return false, nil
+	})); err == nil {
+		t.Fatal("Remove() deleted a published definition")
+	}
+	if err := catalog.Unpublish("demo:remove-me"); err != nil {
+		t.Fatal(err)
+	}
+	if err := catalog.Remove("demo:remove-me", ReferenceCheckFunc(func(string) (bool, error) {
+		return false, nil
+	})); err != nil {
+		t.Fatalf("Remove() error = %v", err)
+	}
+	if _, ok := catalog.Lookup("demo:remove-me"); ok {
+		t.Fatal("Remove() left the definition in the catalog")
+	}
+}
+
+func TestInvalidJSONMutationIsAtomic(t *testing.T) {
+	var catalog Catalog
+	if err := catalog.CreateJSON([]byte(validDefinition)); err != nil {
+		t.Fatalf("CreateJSON() error = %v", err)
+	}
+	before, _ := catalog.Lookup("demo:npc-one")
+	invalid := strings.Replace(validDefinition, `"model_ref": "demo:model"`,
+		`"model_ref": "demo:model", "unexpected": true`, 1)
+	if err := catalog.UpdateJSON("demo:npc-one", []byte(invalid)); err == nil {
+		t.Fatal("UpdateJSON() accepted unknown property")
+	}
+	if err := catalog.UpdateJSON("demo:npc-one", []byte(validDefinition+`{}`)); err == nil {
+		t.Fatal("UpdateJSON() accepted trailing JSON")
+	}
+	after, _ := catalog.Lookup("demo:npc-one")
+	if !reflect.DeepEqual(after, before) {
+		t.Fatalf("invalid JSON changed the definition: before=%#v after=%#v", before, after)
+	}
+	if got := len(catalog.History("demo:npc-one")); got != 1 {
+		t.Fatalf("invalid JSON changed history length to %d", got)
+	}
+	if err := catalog.CreateJSON([]byte(`{"contract_version":"1.0.0"}`)); err == nil {
+		t.Fatal("CreateJSON() accepted incomplete definition")
+	}
+	if got := catalog.Len(); got != 1 {
+		t.Fatalf("failed CreateJSON() changed catalog length to %d", got)
+	}
+}
+
+func TestConcurrentCatalogMutations(t *testing.T) {
+	var catalog Catalog
+	if err := catalog.Create(testDefinition("demo:concurrent", 1)); err != nil {
+		t.Fatal(err)
+	}
+	const workers = 8
+	const iterations = 50
+	var group sync.WaitGroup
+	for worker := 0; worker < workers; worker++ {
+		group.Add(1)
+		go func(worker int) {
+			defer group.Done()
+			for i := 0; i < iterations; i++ {
+				ref := fmt.Sprintf("demo:concurrent-%d-%d", worker, i)
+				if err := catalog.Duplicate("demo:concurrent", ref); err != nil {
+					t.Errorf("Duplicate() error = %v", err)
+					return
+				}
+				if err := catalog.Activate(ref); err != nil {
+					t.Errorf("Activate() error = %v", err)
+					return
+				}
+			}
+		}(worker)
+	}
+	group.Wait()
+	if got, want := catalog.Len(), 1+workers*iterations; got != want {
+		t.Fatalf("Len() = %d, want %d", got, want)
 	}
 }
 
