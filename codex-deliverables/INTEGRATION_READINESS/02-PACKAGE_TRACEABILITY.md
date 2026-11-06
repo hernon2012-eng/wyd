@@ -1,0 +1,25 @@
+# Package traceability
+
+Each row describes the artifact at its verified ref, not an integration claim. “Published” means available at the specified remote commit; it does not mean deployed or merged into a WYD runtime.
+
+| ID / package | Ref | Implemented and demonstrated scope | Not established |
+|---|---|---|---|
+| P01 — Foundation / gateway | `codex/arko-foundation` `3907b862a5f76af85e40a78facbfe58686032f5e` | Go HTTP/JSON v1 gateway with MOCK backend, local volatile session, expiry, idempotency, rate/payload limits, health/version/handshake, Go tests; synthetic JSON schemas/examples and isolated Godot diagnostic demo. | WYD account or character authentication, real backend, persistent state, gameplay authority, legacy protocol support, production deployment. |
+| P02 — Gameplay core | `codex/arko-gameplay-core` `298e1ed50259bb6f6e8419a20160c77711354d72` | Standalone Go inventory/crafting reference primitives, including item add/remove/transfer, crafting planning, idempotent operations, and a MemoryStore implementation. | WYD data/rules, shared runtime or gateway wiring, production persistence, approved recipes, live gameplay. |
+| P03 — Gameplay PostgreSQL | `codex/arko-gameplay-postgres` `1870b89d7fa4a2546c32aac87be83b5f80e3da3b` | P02-style gameplay module with an explicit PostgreSQL adapter, migrations and integration test coverage against ARKO-owned tables. Migrations are explicit; schema names are ARKO-specific. | WYD database migration or connection, automatic migration at startup, shared deployment, production data. |
+| P04 — World metadata continuation | `codex/arko-world-core-20261106` `dd4d948efc9769966d6e2203e3d6a4a4dc14331b` (implementation checkpoint `3e03ecf`) | In-memory metadata CRUD, revisions, publication/unpublication, protected removal, and rollback by creating a new revision. The published continuation reports local test/schema validation and CI. | NPC spawn, world runtime, AI, persistence, live world effects, or server integration. The branch reuses the `arko-npc-dynamic` directory name; do not conflate this P04 work with the earlier NPC branch. |
+| P05 — GM admin | `codex/arko-gm-admin-20261105` `f4f9d574a42e749cb7e13ec56549ba21429bc0e7` | Isolated admin API and demo panel; synthetic account/character directory; preview/dry-run command extension point; identity/session and audit foundations. | Official role/capability policy, official accounts, live game commands, production authorization or integration. Shipped command adapter does not enable gameplay mutation. |
+| P06 — Multichar contract | `codex/arko-multichar-20261105` `51cebfd2e144e2ec1e1f4a80a1818379d97236ad` | Read-only snapshot loader, validator, index, lookup, sorted-listing utility, and CLI around a proposed v1 contract. | Slot activation, session creation/limits, mutation rules, inventory/storage access, server enforcement, or WYD integration. |
+| Earlier NPC metadata package | `codex/arko-npc-dynamic-20261105` `64898fa9e83e3b0e28dcd084e15a9c6936cead6d` | Standalone metadata catalog loader/query and synthetic examples; the old handoff explicitly excludes runtime behavior. | Spawn, AI, services execution, world data, persistence or game integration. |
+| Services registry | `codex/arko-services-20261105` `ee2a968dea83b14b330130ca0cce39d49f3f058f` | Read-only catalog of versioned service descriptors and CLI; descriptors are synthetic and `demo_only`. | Executing shop/teleport/crafting/quest/arena/admin services, official prices/rules, permissions or integration. |
+
+P07–P12 are not present as implemented packages at the refs in this audit. The existing P01 proposal contracts and P02/P03 crafting primitive are not replacements for those missing implementations.
+
+## Evidence categories
+
+- **Code present:** Package files exist at a ref and implement the bounded scope above.
+- **Tested:** A named local command or CI run completed successfully at an identified SHA (see `07-CLAUDE_CODE_FINAL_AUDIT.md`).
+- **Published:** The verified commit is available as a remote ref.
+- **Integrated:** No package is integrated with a real WYD server, client, database, assets, or protocol on the evidence available.
+- **Demonstrated:** Synthetic examples, mock behavior, API/panel demos, or isolated CLI behavior only.
+- **Pending:** Real-system discovery, compatibility proof, authorized assets/data, cross-package wiring, and end-to-end testing.

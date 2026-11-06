@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "DEMONSTRAÇÃO only: a synthetic schema for validator tests; it is not a WYD schema.",
+  "type": "object",
+  "properties": {
+    "fixture_label": {
+      "const": "DEMONSTRAÇÃO — synthetic fixture only; not a WYD format"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_identifier": {"type": "string"},
+          "label": {"type": "string"}
+        },
+        "required": ["source_identifier", "label"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["fixture_label", "records"],
+  "additionalProperties": false
+}
