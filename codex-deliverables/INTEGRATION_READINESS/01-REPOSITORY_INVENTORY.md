@@ -38,7 +38,7 @@ Other local branch refs observed without linked worktrees include `codex/arko-ad
 
 ## Current readiness-documentation checkout
 
-The readiness dossier is published on `codex/arko-integration-readiness-20261106`. Its latest verified HEAD and CI evidence are recorded in the post-audit table below. This branch is based on P01 foundation but contains only readiness documents, the asset-manifest tool, the JSON catalog validator, and their tests/workflow; it is not a merged collection of package code.
+The readiness dossier is published on `codex/arko-integration-readiness-20261106`. Its published checkpoints and CI evidence are recorded in the post-audit table below. This branch is based on P01 foundation but contains only readiness documents, the asset-manifest tool, the JSON catalog validator, and their tests/workflow; it is not a merged collection of package code.
 
 ## Evidence discipline
 
@@ -46,11 +46,11 @@ Use the terms **implemented**, **tested**, **published**, **integrated**, **demo
 
 ## Post-audit updates
 
-The following refs were published after the original inventory snapshot; they supplement rather than rewrite the verified-ref table above:
+The following refs were published after the original inventory snapshot; they supplement rather than rewrite the verified-ref table above. Each CI result is tied to the exact commit shown and may precede later documentation-only commits.
 
-| Branch | Remote HEAD | Evidence |
+| Branch | Published checkpoint | Evidence |
 |---|---|---|
-| `codex/arko-integration-readiness-20261106` | `f656952bbf03c5aeba28afc029b8bc5146df449d` | CI runs [42140678882](https://github.com/hernon2012-eng/wyd/actions/runs/42140678882) and [42141310798](https://github.com/hernon2012-eng/wyd/actions/runs/42141310798) passed; the latter verified this exact HEAD. |
+| `codex/arko-integration-readiness-20261106` | `0818403325356e77a71b4f32aa87b41fdd8407fb` | CI run [42142056704](https://github.com/hernon2012-eng/wyd/actions/runs/42142056704) passed at this exact commit. Earlier runs [42140678882](https://github.com/hernon2012-eng/wyd/actions/runs/42140678882) and [42141310798](https://github.com/hernon2012-eng/wyd/actions/runs/42141310798) also passed. |
 | `codex/arko-recipes-v2-20261106` | `7c201921a40b9c318f62c049ab93692b11b5e986` | P07 code is in `982f392`; CI runs [42141098489](https://github.com/hernon2012-eng/wyd/actions/runs/42141098489) (Gameplay Core) and [42141098492](https://github.com/hernon2012-eng/wyd/actions/runs/42141098492) (PostgreSQL) passed at this exact HEAD. Earlier runs [42140894829](https://github.com/hernon2012-eng/wyd/actions/runs/42140894829) and [42140894804](https://github.com/hernon2012-eng/wyd/actions/runs/42140894804) also passed at `d0fc252`. |
 | `codex/arko-gateway-v1-20261106` | Not published; no remote branch created. | A local P08 prototype was discarded before commit after `go test ./...` failed to compile (`validOperationType` undefined in the experimental WebSocket handler). The isolated worktree is based on P01 `3907b86`; no P01 or remote branch changes were published. |
 
