@@ -14,7 +14,7 @@ Each row describes the artifact at its verified ref, not an integration claim. �
 | Earlier NPC metadata package | `codex/arko-npc-dynamic-20261105` `64898fa9e83e3b0e28dcd084e15a9c6936cead6d` | Standalone metadata catalog loader/query and synthetic examples; the old handoff explicitly excludes runtime behavior. | Spawn, AI, services execution, world data, persistence or game integration. |
 | Services registry | `codex/arko-services-20261105` `ee2a968dea83b14b330130ca0cce39d49f3f058f` | Read-only catalog of versioned service descriptors and CLI; descriptors are synthetic and `demo_only`. | Executing shop/teleport/crafting/quest/arena/admin services, official prices/rules, permissions or integration. |
 
-At the original audit refs, P07–P12 were not present as implemented packages. P07 has since been implemented and published on the separate branch above; P08–P12 remain pending as independent packages. The existing P01 proposal contracts and P02/P03 crafting primitives are not replacements for those missing implementations.
+At the original audit refs, P07–P12 were not present as implemented packages. P07 has since been implemented and published on the separate branch above; P08–P12 remain pending as independent packages. A P08 WebSocket prototype was attempted locally but failed compilation and was discarded; it is not implemented, tested, committed, or published. The existing P01 proposal contracts and P02/P03 crafting primitives are not replacements for those missing implementations.
 
 ## Evidence categories
 

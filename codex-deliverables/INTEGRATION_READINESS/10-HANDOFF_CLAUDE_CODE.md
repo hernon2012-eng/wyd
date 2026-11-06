@@ -12,7 +12,8 @@ Continue integration discovery from the verified refs in `01-REPOSITORY_INVENTOR
 4. Correct the three known documentation contradictions listed in `07-CLAUDE_CODE_FINAL_AUDIT.md` in their owning package branches, without rewriting historical facts.
 5. Produce a verified protocol/data/policy inventory. Keep protocol 12000 marked **UNVERIFIED** until evidence satisfies the acceptance gate.
 6. Review P07 at `codex/arko-recipes-v2-20261106` (`7c201921a40b9c318f62c049ab93692b11b5e986`) and its `RECIPES_V2.md`; treat it as an isolated, published reference implementation, not as integrated gameplay. Its Gameplay Core and PostgreSQL CI runs `42141098489` and `42141098492` passed at this exact HEAD.
-7. Continue P08–P12 only on isolated branches and in dependency order; use the documented P07 extension points without inventing recipes, policies, or WYD interfaces.
+7. P08–P12 remain pending. A local P08 WebSocket prototype did not compile and was discarded before publication; do not treat it as an implementation or as P01 behavior.
+8. Continue P08–P12 only on isolated branches and in dependency order; use the documented P07 extension points without inventing recipes, policies, or WYD interfaces.
 
 ## Implementation rules
 
