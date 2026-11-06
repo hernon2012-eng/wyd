@@ -13,3 +13,9 @@
 
 This matrix covers only in-memory metadata behavior. It does not assert world
 runtime behavior, external reference tracking, persistence, or integration.
+
+P04 CI completed successfully in run
+[42138452469](https://github.com/hernon2012-eng/wyd/actions/runs/42138452469)
+for commit `3e03ecff373db0f3ba060d5c7141af6e142dc361` on
+`codex/arko-world-core-20261106`. This validates the CI suite, not a live WYD
+integration; no merge or deployment occurred.

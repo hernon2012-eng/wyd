@@ -10,7 +10,8 @@ O pacote implementa metadados e catálogo substituível, não comportamento de N
 
 | Checkpoint | Estado | Gate |
 |---|---|---|
-| P04 — Operações em memória | CRUD/duplicação, estado ativo, publicação, histórico, rollback e remoção com verificação fail-closed | Testes Go incluem atomicidade, JSON inválido, histórico/publicação e concorrência; histórico/publicação são voláteis |
+| P04 — Operações em memória | Publicado em `codex/arko-world-core-20261106`, commit `3e03ecff373db0f3ba060d5c7141af6e142dc361`; HEAD local/remoto coincidem | CI [42138452469](https://github.com/hernon2012-eng/wyd/actions/runs/42138452469) passou no SHA exato; testes Go incluem atomicidade, JSON inválido, histórico/publicação e concorrência |
 
 P04 não adiciona persistência nem integração real. Consulte `LIMITATIONS.md`
 para as garantias e fronteiras do verificador externo de referências.
+Não houve merge nem deploy.

@@ -11,8 +11,8 @@
   simultâneas a recargas.
 - Adicionados schema, exemplo sintético DEMONSTRAÇÃO, documentação e workflow
   de CI isolado.
-- Sem alterações nos pacotes anteriores, sem conexão ou migração de sistemas/
-  bancos WYD, sem commit e sem push.
+- Sem alterações nos pacotes anteriores, nem conexão ou migração de sistemas/
+  bancos WYD.
 # Worklog
 
 ## 2026-11-05 — pacote publicado
@@ -36,5 +36,14 @@
   precisam ser despublicadas antes da remoção.
 - Criados testes de metadados e serviços múltiplos, revisões, rollback,
   publicação, proteção de referência, JSON inválido/atomicidade e concorrência.
-- Sem spawn, IA, runtime de mundo, efeitos de serviço, integração externa,
-  alterações de schema, commit ou push.
+- Sem spawn, IA, runtime de mundo, efeitos de serviço, integração externa ou
+  alterações de schema.
+
+## 2026-11-06 — publicação do checkpoint P04
+
+- Código P04 publicado no commit `3e03ecff373db0f3ba060d5c7141af6e142dc361`
+  na branch `codex/arko-world-core-20261106`.
+- HEAD local e remoto coincidem nesse SHA.
+- CI [42138452469](https://github.com/hernon2012-eng/wyd/actions/runs/42138452469)
+  concluiu com sucesso no mesmo SHA e branch.
+- Nenhum merge, deploy ou integração com WYD foi realizado.
