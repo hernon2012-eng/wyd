@@ -21,5 +21,8 @@ behavior or as evidence of server integration.
 - Implementation commit: `dc239df7edc95ae907542e2bcff9ecc27f181412`.
 - Initial CI: [run 42133323446](https://github.com/hernon2012-eng/wyd/actions/runs/42133323446)
   passed format, Go tests/race/vet/build, and schema/example validation.
+- Published report/workflow checkpoint: `373c7a19f8278b8e9817556a01057e81d86e0b76`;
+  CI [42133424754](https://github.com/hernon2012-eng/wyd/actions/runs/42133424754)
+  passed on this HEAD.
 - Validation run locally: Go format, unit/race tests, vet, build, Draft 2020-12
   schema/example checks, CLI validation and lookup.
