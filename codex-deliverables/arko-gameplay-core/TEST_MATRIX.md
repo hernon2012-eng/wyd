@@ -36,3 +36,23 @@ Fault injection falha após a gravação local de inventário, após o registro 
 | Isolamento do banco de teste | Conexão apenas ao serviço descartável `arko_test` | `ARKO_POSTGRES_TEST_DSN` explícito; harness recusa endpoint fora do host/porta/banco/usuário isolados |
 
 Os testes em `internal/postgres/store_test.go` usam `sqlmock` e complementam, mas não contam como integração real. Os testes `TestPostgres*` foram executados localmente contra PostgreSQL 16 descartável em `127.0.0.1:55432/arko_test`, com `go test ./... -count=1` e `go test -race ./... -count=1`. A execução GitHub Actions [42123905756](https://github.com/hernon2012-eng/wyd/actions/runs/42123905756) passou nos jobs `go`, `contracts` e `postgres-integration`; o job PostgreSQL executou ambos os comandos contra o serviço PostgreSQL 16.
+
+## P07 — receitas v2
+
+| Caso | Esperado | Cobertura |
+|---|---|---|
+| JSON malformado, versão/output mode ausentes, tentativa de reescrever e duplicata idêntica ID+versão | Erro isolado por arquivo; duplicata recebe diagnóstico mesmo idêntica e só uma candidata é mantida | `TestReloadIsolatesMalformedMissingVersionAndConflictingRecipes` |
+| Payload/histórico imutável | Mutar cópia retornada não altera o snapshot publicado | `TestCatalogReturnsImmutableRecipeCopies` |
+| Raiz de catálogo indisponível | Falha de reload não troca o snapshot atual | `TestReloadFailurePreservesPublishedSnapshot` |
+| Reload e leitura concorrentes | Leitores veem versões completas em snapshots imutáveis | `TestConcurrentCatalogReloadAndReads` (`-race`) |
+| Seletor de categoria com policy + requisito tipado, modo `new_item` | Consome pelo planejador existente e entrega o produto declarado | `TestCraftV2NewItemCategoryResolutionAndTypedRequirement` |
+| Modo `transform` | Consome source ID/quantidade e outros materiais, entrega produto configurado | `TestCraftV2TransformConsumesSourceAndProducesConfiguredTarget` |
+| Rollback nos modos `new_item` e `transform` após entrega parcial planejada | Estado e inventário não são persistidos se produto não cabe | `TestCraftV2NewItemRollbackAfterPartialTargetDelivery`, `TestCraftV2TransformRollbackAfterPartialTargetDelivery` |
+| Modo v2 ausente | Rejeição e inventário inalterado; v1 sem modo preservado | `TestCraftV2MissingOutputModeRejectedWithoutMutation` |
+| Versão ausente / materiais insuficientes | Rejeição terminal sem mutar inventário | `TestCraftV2MissingVersionAndInsufficientMaterials` |
+| Repetição e fingerprint diferente | Replay de uma entrega; mesmo key com conteúdo divergente conflita | `TestCraftV2RepeatedRequestAndDifferentContentConflict` |
+| Policy ausente ou alocação inexata | Rejeição fail-closed sem consumo | `TestCraftV2FailsClosedWithoutCategoryPolicyOrTypedChecker`, `TestCraftV2CategoryResolverMustResolveExactQuantity` |
+| Erro de infraestrutura do resolver | Aborta sem alterar inventário nem memorizar resultado terminal | `TestCraftV2ResolverInfrastructureErrorIsNotMemorized` |
+| Contrato v2 | JSON Schema Draft 2020-12 válido, versão e output mode obrigatórios, fonte apenas no transform, seletor ID/categoria exclusivo, exemplos sintéticos | `python tests/validate_contracts.py` |
+
+O fluxo v2 usa os mesmos testes transacionais/idempotentes e adapter do core. Não se executou integração adicional contra PostgreSQL nesta etapa; nenhum banco real foi acessado.

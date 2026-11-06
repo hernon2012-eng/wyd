@@ -8,7 +8,7 @@ O pacote é um módulo Go independente. Ele não depende do gateway MOCK, não f
 
 - `ItemDefinition`: chave opaca e estável, limites de pilha e classificação genérica. A chave não é um ID WYD confirmado. O contrato básico não modela atributos por instância; se forem necessários, a chave de compatibilidade de pilha terá de incluí-los.
 - `Inventory`: pertence a um personagem, tem slots limitados e pilhas; quantidades devem ser positivas e limitadas sem overflow.
-- `Recipe`: chave, versão, nome, materiais, produto, quantidade, requisitos configuráveis e estado ativo.
+- `Recipe`: chave e versão imutáveis, entradas por ID ou seletor, produto, payloads de requisito tipados e estado ativo. As definições v2 são arquivos de configuração em shards de categoria; não armazenam estado de produção.
 - `Craft`: operação síncrona de fabricação identificada por personagem e chave idempotente; `quantity` representa número de lotes.
 - `OperationRecord`: tipo, personagem, request ID, fingerprint, estado terminal (`completed`/`rejected`), resultado e timestamps para impedir repetição.
 
@@ -23,6 +23,14 @@ O fluxo é síncrono; estado `in_progress` não é visível fora da transação.
 Consumo determinístico percorre itens e slots em ordem estável; a alocação do produto ocorre sobre a cópia já atualizada pelo consumo, priorizando pilhas compatíveis e depois slots vazios de menor índice. Se não couber tudo, o plano inteiro é rejeitado. Quantidades por lote multiplicadas por lotes e ingredientes repetidos são agregadas com detecção de overflow.
 
 ## Extensão
+
+O catálogo v2 publica um snapshot completo por troca atômica de ponteiro. Cada arquivo JSON inválido é isolado como diagnóstico; receitas válidas continuam disponíveis e versões anteriormente publicadas permanecem no histórico. Reescrever o conteúdo de um mesmo `(recipe_id, version)` é rejeitado. Duplicatas dentro do mesmo reload, inclusive conteúdo idêntico, geram diagnóstico por arquivo e apenas a primeira candidata em ordem estável entra no histórico. Uma falha ao ler a raiz ou um shard preserva o snapshot atual.
+
+Seletores por ID são concretos. Seletores por categoria só são executados com `MaterialSelectorResolver` fornecido pelo servidor, que deve devolver alocações exatas; a engine valida soma, IDs, posse/quantidade e inventário pelo planejador existente. Nenhuma regra de correspondência ou prioridade de categoria é presumida. Erros de infraestrutura do resolver abortam a operação sem memorização; alocações inválidas falham fechadas. Payloads de requisito são opacos e só passam com `TypedRequirementChecker`; não há semântica de jogo embutida. O produto `product` suporta transformações e novos IDs quando a definição correspondente existe no catálogo de itens já fornecido ao repositório de gameplay.
+
+Definições v2 declaram `output_mode`: `new_item` entrega o produto configurado; `transform` também consome o `transform_source` declarado. Fonte, materiais e entrega passam pelo mesmo `PlanCraft`; não há cópia de atributos por instância nem regras implícitas. Ver `RECIPES_V2.md` para formato e semântica detalhados.
+
+`EngineOptions.RecipeProvider` permite que o catálogo de arquivos forneça versões ao motor existente; inventário, planejamento, transação e idempotência continuam no `Engine` e no `Repository`/adapter PostgreSQL. O catálogo não persiste inventários, receitas não criam itens no banco e nenhum estado de produção é guardado nos arquivos.
 
 Requisitos de nível, receita aprendida, estação, duração, fila, pedidos, retirada, personagens auxiliares, limites por conta e especialização serão interfaces/políticas futuras. O fluxo básico não cria fila, timer ou produção assíncrona.
 

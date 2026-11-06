@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 )
@@ -34,16 +35,17 @@ var (
 type ErrorCode string
 
 const (
-	CodeInvalidRequest        ErrorCode = "invalid_request"
-	CodeRecipeNotFound        ErrorCode = "recipe_not_found"
-	CodeRecipeInactive        ErrorCode = "recipe_inactive"
-	CodeRequirementsNotMet    ErrorCode = "requirements_not_met"
-	CodeInsufficientMaterials ErrorCode = "insufficient_materials"
-	CodeInventoryFull         ErrorCode = "inventory_full"
-	CodeItemNotFound          ErrorCode = "item_not_found"
-	CodeInsufficientItems     ErrorCode = "insufficient_items"
-	CodeIdempotencyConflict   ErrorCode = "idempotency_conflict"
-	CodeDemoRecipeDisabled    ErrorCode = "demo_recipe_disabled"
+	CodeInvalidRequest           ErrorCode = "invalid_request"
+	CodeRecipeNotFound           ErrorCode = "recipe_not_found"
+	CodeRecipeInactive           ErrorCode = "recipe_inactive"
+	CodeRequirementsNotMet       ErrorCode = "requirements_not_met"
+	CodeInsufficientMaterials    ErrorCode = "insufficient_materials"
+	CodeInventoryFull            ErrorCode = "inventory_full"
+	CodeItemNotFound             ErrorCode = "item_not_found"
+	CodeInsufficientItems        ErrorCode = "insufficient_items"
+	CodeIdempotencyConflict      ErrorCode = "idempotency_conflict"
+	CodeDemoRecipeDisabled       ErrorCode = "demo_recipe_disabled"
+	CodeMaterialResolutionFailed ErrorCode = "material_resolution_failed"
 )
 
 type ItemKind string
@@ -81,15 +83,37 @@ type RecipeRequirement struct {
 	Value string `json:"value"`
 }
 
+type MaterialSelector struct {
+	ItemID   ItemID `json:"item_id,omitempty"`
+	Category string `json:"category,omitempty"`
+	Quantity int64  `json:"quantity"`
+}
+
+type TypedRequirement struct {
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type RecipeOutputMode string
+
+const (
+	RecipeOutputNewItem   RecipeOutputMode = "new_item"
+	RecipeOutputTransform RecipeOutputMode = "transform"
+)
+
 type Recipe struct {
-	ID           RecipeID            `json:"recipe_id"`
-	Version      uint64              `json:"version"`
-	Name         string              `json:"name"`
-	Materials    []ItemAmount        `json:"materials"`
-	Product      ItemAmount          `json:"product"`
-	Requirements []RecipeRequirement `json:"requirements,omitempty"`
-	Active       bool                `json:"active"`
-	DemoOnly     bool                `json:"demo_only"`
+	ID                RecipeID            `json:"recipe_id"`
+	Version           uint64              `json:"version"`
+	Name              string              `json:"name"`
+	Materials         []ItemAmount        `json:"materials,omitempty"`
+	MaterialSelectors []MaterialSelector  `json:"material_selectors,omitempty"`
+	OutputMode        RecipeOutputMode    `json:"output_mode,omitempty"`
+	TransformSource   *ItemAmount         `json:"transform_source,omitempty"`
+	Product           ItemAmount          `json:"product"`
+	Requirements      []RecipeRequirement `json:"requirements,omitempty"`
+	TypedRequirements []TypedRequirement  `json:"typed_requirements,omitempty"`
+	Active            bool                `json:"active"`
+	DemoOnly          bool                `json:"demo_only"`
 }
 
 type Actor struct {
@@ -162,4 +186,17 @@ type TransferRequest struct {
 
 type RequirementChecker interface {
 	Check(ctx context.Context, actor Actor, characterID CharacterID, requirements []RecipeRequirement) (bool, error)
+}
+
+type TypedRequirementChecker interface {
+	CheckTyped(ctx context.Context, actor Actor, characterID CharacterID, requirements []TypedRequirement) (bool, error)
+}
+
+type MaterialSelectorResolver interface {
+	// quantity is the amount required per batch; the core planner applies batch count.
+	ResolveCategory(ctx context.Context, actor Actor, characterID CharacterID, category string, quantity int64, inventory Inventory) ([]ItemAmount, error)
+}
+
+type RecipeProvider interface {
+	ReadRecipe(ctx context.Context, id RecipeID, version uint64) (Recipe, bool, error)
 }

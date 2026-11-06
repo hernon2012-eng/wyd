@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/arko-gameplay-core/v2/recipe-definition.schema.json",
+  "title": "ARKO Recipe Definition v2",
+  "description": "A configuration-only recipe document stored under its category shard. Examples are synthetic DEMONSTRAÇÃO data, not official game rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["category", "recipe"],
+  "properties": {
+    "category": {"$ref": "#/$defs/category"},
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recipe_id", "version", "name", "output_mode", "product", "active", "demo_only"],
+      "properties": {
+        "recipe_id": {"$ref": "#/$defs/identifier"},
+        "version": {"type": "integer", "minimum": 1},
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "output_mode": {"enum": ["new_item", "transform"]},
+        "transform_source": {"$ref": "#/$defs/itemAmount"},
+        "materials": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"$ref": "#/$defs/itemAmount"}},
+        "material_selectors": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"$ref": "#/$defs/materialSelector"}},
+        "product": {"$ref": "#/$defs/itemAmount"},
+        "requirements": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "value"],
+            "properties": {
+              "key": {"$ref": "#/$defs/identifier"},
+              "value": {"type": "string", "maxLength": 256}
+            }
+          }
+        },
+        "typed_requirements": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "payload"],
+            "properties": {
+              "type": {"$ref": "#/$defs/identifier"},
+              "payload": true
+            }
+          }
+        },
+        "active": {"type": "boolean"},
+        "demo_only": {"type": "boolean"}
+      },
+      "oneOf": [
+        {"required": ["materials"], "not": {"required": ["material_selectors"]}},
+        {"required": ["material_selectors"], "not": {"required": ["materials"]}}
+      ],
+      "allOf": [
+        {
+          "if": {"properties": {"output_mode": {"const": "transform"}}, "required": ["output_mode"]},
+          "then": {"required": ["transform_source"]}
+        },
+        {
+          "if": {"properties": {"output_mode": {"const": "new_item"}}, "required": ["output_mode"]},
+          "then": {"not": {"required": ["transform_source"]}}
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "identifier": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$"},
+    "category": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9._-]+$"},
+    "itemAmount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "quantity"],
+      "properties": {
+        "item_id": {"$ref": "#/$defs/identifier"},
+        "quantity": {"type": "integer", "minimum": 1}
+      }
+    },
+    "materialSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quantity"],
+      "properties": {
+        "item_id": {"$ref": "#/$defs/identifier"},
+        "category": {"$ref": "#/$defs/identifier"},
+        "quantity": {"type": "integer", "minimum": 1}
+      },
+      "oneOf": [
+        {"required": ["item_id"], "not": {"required": ["category"]}},
+        {"required": ["category"], "not": {"required": ["item_id"]}}
+      ]
+    }
+  }
+}

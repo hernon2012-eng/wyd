@@ -1,0 +1,15 @@
+{
+  "category": "demonstration",
+  "recipe": {
+    "recipe_id": "demo:alloy",
+    "version": 1,
+    "name": "DEMONSTRAÇÃO - conflicting rewrite",
+    "output_mode": "new_item",
+    "material_selectors": [
+      {"item_id": "demo:ore", "quantity": 1}
+    ],
+    "product": {"item_id": "demo:alloy", "quantity": 1},
+    "active": true,
+    "demo_only": true
+  }
+}

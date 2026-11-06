@@ -4,6 +4,8 @@ Contrato lógico v1 independente de transporte. Ainda não define endpoint HTTP,
 
 Os schemas correspondentes estão em `schemas/v1/`: `craft-request.schema.json`, `craft-result.schema.json`, `recipe.schema.json` e `inventory.schema.json`. Os exemplos no diretório `examples/` são fixtures DEMONSTRAÇÃO e não definem dados ou regras de produção.
 
+Definições v2 são documentos em `recipes/<categoria>/*.json` validados por `schemas/v2/recipe-definition.schema.json`. Cada documento contém categoria de shard e uma receita imutável por `recipe_id`+`version`, com `output_mode` (`new_item` ou `transform`). Transformação declara `transform_source` e usa o mesmo planner atômico para consumir a fonte/materiais e entregar o produto. Materiais por categoria exigem um resolver explícito do servidor; payloads tipados exigem um checker tipado. Sem políticas configuradas, a engine rejeita/falha fechada. Erro operacional de política aborta sem gravar uma rejeição. Consulte `RECIPES_V2.md` para reload, duplicatas, histórico e limites.
+
 ## Solicitação
 
 Uma intenção de fabricação contém `request_id`, `idempotency_key`, `character_id`, `recipe_id`, `recipe_version` e `quantity` (número de lotes, positivo e limitado). Materiais e saída escalam linearmente por lotes com checagem de overflow. A identidade autenticada deve vir do contexto autoritativo do servidor e ser autorizada para `character_id`; não confie nessa identidade enviada pelo cliente. Requisitos são avaliados contra estado autoritativo, não contra declarações do cliente.

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/arko-gameplay-core/v2/craft-request.schema.json",
+  "title": "ARKO Craft Request v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "idempotency_key", "character_id", "recipe_id", "recipe_version", "quantity"],
+  "properties": {
+    "request_id": {"$ref": "#/$defs/identifier"},
+    "idempotency_key": {"$ref": "#/$defs/identifier"},
+    "character_id": {"$ref": "#/$defs/identifier"},
+    "recipe_id": {"$ref": "#/$defs/identifier"},
+    "recipe_version": {"type": "integer", "minimum": 1},
+    "quantity": {"type": "integer", "minimum": 1, "maximum": 100}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$"}
+  }
+}

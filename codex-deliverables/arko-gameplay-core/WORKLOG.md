@@ -62,3 +62,21 @@
 - A revisão de segurança independente previamente registrada não encontrou vulnerabilidades no escopo revisado. Isso não equivale a integração, deploy ou aprovação para usar o WYD real.
 - O `STATUS_GERAL_ARKO.md` permanece sem alteração no worktree `codex/arko-foundation`; sua seção do Pacote 3 está desatualizada e precisa de atualização coordenada após revisão. Não foram localizados `ROADMAP_PRODUCAO_ARKO.md` nem `CONSOLIDACAO_ARQUITETURAL_ARKO.md`.
 - Nenhum banco WYD foi acessado/migrado; não houve merge nem deploy. Ponto de parada: aguardar revisão do usuário, sem iniciar outros pacotes.
+
+## 2026-11-06 — P07: catálogo de receitas v2
+
+- Trabalho iniciado isoladamente no worktree `codex/arko-recipes-v2-20261106`, base `1870b89`; alterações ficam somente neste worktree e sem commit/push.
+- Adicionado contrato v2 de definição/request/result e arquivo sintético `recipes/demonstration/demo-alloy-v2.json`. O loader lê um JSON por arquivo sob shard de categoria, isola arquivos inválidos e mantém versões históricas imutáveis por `(recipe_id, version)`.
+- Reload publica uma geração por troca atômica; falha na raiz mantém snapshot. Diagnósticos por arquivo são expostos; leituras retornam cópias defensivas.
+- Extensões v2 conectadas ao `Engine.Craft` atual. Resolução por ID é direta; resolução por categoria exige policy server-side explícita e soma exata; payloads de requisitos permanecem opacos até um checker tipado autorizar. Erro operacional de policy aborta sem memorizar rejeição.
+- Transformação/produto usa `product` e motor de crafting atual; definição do item produzido deve já existir no catálogo de itens do repositório, sem criar estado de item a partir do arquivo de receita. Nenhuma regra oficial foi inferida.
+- Não foram adicionadas filas, timers, ordens, migração de gameplay ou acesso a servidor/banco WYD.
+- Verificação: `gofmt`, `go test -race -count=1 ./...`, `go vet ./...`, `go build ./...`, `python tests/validate_contracts.py` e `git diff --check` passaram; contratos validaram 7 schemas e 7 contratos/exemplos sintéticos. Nenhum commit/push foi feito.
+
+## 2026-11-06 — P07 follow-up de revisão
+
+- Adicionado `RECIPES_V2.md` com API/schema, sharding, reload/histórico, duplicatas, idempotência, policies e limites.
+- Tornado `output_mode` obrigatório no contrato v2 (`new_item` ou `transform`). Transformação declara `transform_source` por ID+quantidade; engine agrega essa fonte aos materiais e delega consumo/entrega ao `PlanCraft` existente, sem atributo por instância. Testes cobrem os dois modos e rollback após entrega parcial planejada.
+- O loader agora diagnostica por arquivo duplicatas da mesma dupla ID+versão no reload, mesmo com conteúdo idêntico, mantendo apenas primeira candidata válida em ordem estável. Fixture e teste regressivo adicionados.
+- Mantida compatibilidade de receitas legadas v1: validação core permite modo vazio nos dados existentes; o loader de definições v2 exige explicitamente um dos modos.
+- Verificação follow-up: `go test -count=1 ./...`, `go test -race -count=1 ./...`, `go vet ./...`, `go build ./...`, `python tests/validate_contracts.py` (7 schemas e 7 contratos/exemplos), `gofmt` e `git diff --check` passaram. Sem commit/push; sem acesso a banco.

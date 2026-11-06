@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"math"
 	"sort"
 	"strings"
@@ -202,6 +203,13 @@ func ValidateRecipe(recipe Recipe) error {
 	return nil
 }
 
+func ValidateRecipeDefinitionV2(recipe Recipe) error {
+	if !validRecipe(recipe) || (recipe.OutputMode != RecipeOutputNewItem && recipe.OutputMode != RecipeOutputTransform) {
+		return ErrInvalidRequest
+	}
+	return nil
+}
+
 func validInventoryShape(inventory Inventory) bool {
 	if !validID(string(inventory.CharacterID)) || len(inventory.Slots) > 10000 {
 		return false
@@ -221,7 +229,18 @@ func validInventoryShape(inventory Inventory) bool {
 }
 
 func validRecipe(recipe Recipe) bool {
-	if !validID(string(recipe.ID)) || recipe.Version == 0 || recipe.Version > math.MaxInt64 || strings.TrimSpace(recipe.Name) == "" || len(recipe.Name) > 128 || len(recipe.Materials) == 0 || len(recipe.Materials) > MaxRecipeMaterials || len(recipe.Requirements) > MaxRecipeMaterials {
+	hasMaterials := len(recipe.Materials) > 0
+	hasSelectors := len(recipe.MaterialSelectors) > 0
+	if !validID(string(recipe.ID)) || recipe.Version == 0 || recipe.Version > math.MaxInt64 || strings.TrimSpace(recipe.Name) == "" || len(recipe.Name) > 128 || hasMaterials == hasSelectors || len(recipe.Materials) > MaxRecipeMaterials || len(recipe.MaterialSelectors) > MaxRecipeMaterials || len(recipe.Requirements) > MaxRecipeMaterials || len(recipe.TypedRequirements) > MaxRecipeMaterials {
+		return false
+	}
+	if recipe.OutputMode != "" && recipe.OutputMode != RecipeOutputNewItem && recipe.OutputMode != RecipeOutputTransform {
+		return false
+	}
+	if recipe.OutputMode == RecipeOutputNewItem && recipe.TransformSource != nil {
+		return false
+	}
+	if recipe.OutputMode == RecipeOutputTransform && (recipe.TransformSource == nil || !validID(string(recipe.TransformSource.ItemID)) || recipe.TransformSource.Quantity <= 0) {
 		return false
 	}
 	if !validID(string(recipe.Product.ItemID)) || recipe.Product.Quantity <= 0 {
@@ -232,8 +251,24 @@ func validRecipe(recipe Recipe) bool {
 			return false
 		}
 	}
+	for _, selector := range recipe.MaterialSelectors {
+		if selector.Quantity <= 0 || (selector.ItemID == "") == (selector.Category == "") {
+			return false
+		}
+		if selector.ItemID != "" && !validID(string(selector.ItemID)) {
+			return false
+		}
+		if selector.Category != "" && !validID(selector.Category) {
+			return false
+		}
+	}
 	for _, requirement := range recipe.Requirements {
 		if !validID(requirement.Key) || len(requirement.Value) > 256 {
+			return false
+		}
+	}
+	for _, requirement := range recipe.TypedRequirements {
+		if !validID(requirement.Type) || len(requirement.Payload) == 0 || len(requirement.Payload) > 4096 || !json.Valid(requirement.Payload) {
 			return false
 		}
 	}

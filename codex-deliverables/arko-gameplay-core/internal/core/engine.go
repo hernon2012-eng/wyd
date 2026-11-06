@@ -13,9 +13,12 @@ import (
 )
 
 type EngineOptions struct {
-	AllowDemoRecipes bool
-	Requirements     RequirementChecker
-	Now              func() time.Time
+	AllowDemoRecipes  bool
+	Requirements      RequirementChecker
+	TypedRequirements TypedRequirementChecker
+	MaterialResolver  MaterialSelectorResolver
+	RecipeProvider    RecipeProvider
+	Now               func() time.Time
 }
 
 type Engine struct {
@@ -53,12 +56,28 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 		if request.Quantity <= 0 || request.Quantity > MaxBatches {
 			return rejected(CodeInvalidRequest), nil
 		}
-		recipe, ok, err := tx.ReadRecipe(request.RecipeID, request.RecipeVersion)
+		var recipe Recipe
+		var ok bool
+		var err error
+		if e.options.RecipeProvider != nil {
+			recipe, ok, err = e.options.RecipeProvider.ReadRecipe(ctx, request.RecipeID, request.RecipeVersion)
+		} else {
+			recipe, ok, err = tx.ReadRecipe(request.RecipeID, request.RecipeVersion)
+		}
 		if err != nil {
 			return OperationResult{}, err
 		}
 		if !ok {
 			return rejected(CodeRecipeNotFound), nil
+		}
+		var validationErr error
+		if e.options.RecipeProvider != nil {
+			validationErr = ValidateRecipeDefinitionV2(recipe)
+		} else {
+			validationErr = ValidateRecipe(recipe)
+		}
+		if validationErr != nil {
+			return rejected(CodeInvalidRequest), nil
 		}
 		if !recipe.Active {
 			return rejected(CodeRecipeInactive), nil
@@ -78,6 +97,18 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 				return rejected(CodeRequirementsNotMet), nil
 			}
 		}
+		if len(recipe.TypedRequirements) > 0 {
+			if e.options.TypedRequirements == nil {
+				return rejected(CodeRequirementsNotMet), nil
+			}
+			accepted, checkErr := e.options.TypedRequirements.CheckTyped(ctx, actor, request.CharacterID, cloneRecipe(recipe).TypedRequirements)
+			if checkErr != nil {
+				return OperationResult{}, fmt.Errorf("%w: typed requirement evaluation: %v", ErrStorage, checkErr)
+			}
+			if !accepted {
+				return rejected(CodeRequirementsNotMet), nil
+			}
+		}
 		inventory, exists, err := tx.ReadInventory(request.CharacterID)
 		if err != nil {
 			return OperationResult{}, err
@@ -85,8 +116,19 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 		if !exists {
 			return OperationResult{}, ErrNotFound
 		}
+		planningRecipe, resolved, resolveErr := e.resolveMaterials(ctx, actor, request.CharacterID, inventory, recipe)
+		if resolveErr != nil {
+			return OperationResult{}, fmt.Errorf("%w: material selection: %v", ErrStorage, resolveErr)
+		}
+		if !resolved {
+			return rejected(CodeMaterialResolutionFailed), nil
+		}
+		if planningRecipe.OutputMode == RecipeOutputTransform {
+			planningRecipe.Materials = append(planningRecipe.Materials, *planningRecipe.TransformSource)
+			planningRecipe.MaterialSelectors = nil
+		}
 		definitions := make(map[ItemID]ItemDefinition)
-		for _, amount := range recipe.Materials {
+		for _, amount := range planningRecipe.Materials {
 			definition, found, err := tx.ReadItemDefinition(amount.ItemID)
 			if err != nil {
 				return OperationResult{}, err
@@ -95,10 +137,10 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 				definitions[amount.ItemID] = definition
 			}
 		}
-		if definition, found, err := tx.ReadItemDefinition(recipe.Product.ItemID); err != nil {
+		if definition, found, err := tx.ReadItemDefinition(planningRecipe.Product.ItemID); err != nil {
 			return OperationResult{}, err
 		} else if found {
-			definitions[recipe.Product.ItemID] = definition
+			definitions[planningRecipe.Product.ItemID] = definition
 		}
 		for _, slot := range inventory.Slots {
 			if slot.ItemID == "" {
@@ -112,15 +154,74 @@ func (e *Engine) Craft(ctx context.Context, actor Actor, request CraftRequest) (
 				definitions[slot.ItemID] = definition
 			}
 		}
-		updated, consumed, produced, code := PlanCraft(inventory, recipe, request.Quantity, definitions)
+		updated, consumed, produced, code := PlanCraft(inventory, planningRecipe, request.Quantity, definitions)
 		if code != "" {
 			return rejected(code), nil
 		}
+
 		if err := tx.PutInventory(updated); err != nil {
 			return OperationResult{}, err
 		}
 		return OperationResult{Status: OperationCompleted, Consumed: consumed, Produced: []ItemAmount{produced}}, nil
 	})
+}
+
+func (e *Engine) resolveMaterials(ctx context.Context, actor Actor, characterID CharacterID, inventory Inventory, recipe Recipe) (Recipe, bool, error) {
+	if len(recipe.MaterialSelectors) == 0 {
+		return recipe, true, nil
+	}
+	if len(recipe.Materials) != 0 {
+		return Recipe{}, false, nil
+	}
+	resolved := make(map[ItemID]int64)
+	for _, selector := range recipe.MaterialSelectors {
+		if selector.Quantity <= 0 {
+			return Recipe{}, false, nil
+		}
+		if selector.ItemID != "" {
+			total, ok := checkedAdd(resolved[selector.ItemID], selector.Quantity)
+			if !ok {
+				return Recipe{}, false, nil
+			}
+			resolved[selector.ItemID] = total
+			continue
+		}
+		if selector.Category == "" || e.options.MaterialResolver == nil {
+			return Recipe{}, false, nil
+		}
+		allocations, err := e.options.MaterialResolver.ResolveCategory(ctx, actor, characterID, selector.Category, selector.Quantity, cloneInventory(inventory))
+		if err != nil {
+			return Recipe{}, false, err
+		}
+		if len(allocations) == 0 {
+			return Recipe{}, false, nil
+		}
+		var allocated int64
+		for _, allocation := range allocations {
+			if !validID(string(allocation.ItemID)) || allocation.Quantity <= 0 {
+				return Recipe{}, false, nil
+			}
+			var valid bool
+			allocated, valid = checkedAdd(allocated, allocation.Quantity)
+			if !valid {
+				return Recipe{}, false, nil
+			}
+			total, valid := checkedAdd(resolved[allocation.ItemID], allocation.Quantity)
+			if !valid {
+				return Recipe{}, false, nil
+			}
+			resolved[allocation.ItemID] = total
+		}
+		if allocated != selector.Quantity {
+			return Recipe{}, false, nil
+		}
+	}
+	recipe.Materials = make([]ItemAmount, 0, len(resolved))
+	for itemID, quantity := range resolved {
+		recipe.Materials = append(recipe.Materials, ItemAmount{ItemID: itemID, Quantity: quantity})
+	}
+	recipe.MaterialSelectors = nil
+	return recipe, true, nil
 }
 
 func (e *Engine) Add(ctx context.Context, actor Actor, request AddRequest) (OperationResult, error) {

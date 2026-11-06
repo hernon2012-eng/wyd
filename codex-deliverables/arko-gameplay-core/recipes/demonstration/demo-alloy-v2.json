@@ -1,0 +1,19 @@
+{
+  "category": "demonstration",
+  "recipe": {
+    "recipe_id": "demo:alloy",
+    "version": 2,
+    "name": "DEMONSTRAÇÃO - alloy transformation",
+    "output_mode": "transform",
+    "transform_source": {"item_id": "demo:ore", "quantity": 1},
+    "material_selectors": [
+      {"category": "demo:ore-category", "quantity": 2}
+    ],
+    "product": {"item_id": "demo:refined-alloy", "quantity": 1},
+    "typed_requirements": [
+      {"type": "demo:example-policy", "payload": {"opaque": true}}
+    ],
+    "active": true,
+    "demo_only": true
+  }
+}

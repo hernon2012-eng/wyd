@@ -314,7 +314,16 @@ func cloneOperations(source map[scopeKey]OperationRecord) map[scopeKey]Operation
 
 func cloneRecipe(recipe Recipe) Recipe {
 	recipe.Materials = append([]ItemAmount(nil), recipe.Materials...)
+	recipe.MaterialSelectors = append([]MaterialSelector(nil), recipe.MaterialSelectors...)
+	if recipe.TransformSource != nil {
+		source := *recipe.TransformSource
+		recipe.TransformSource = &source
+	}
 	recipe.Requirements = append([]RecipeRequirement(nil), recipe.Requirements...)
+	recipe.TypedRequirements = append([]TypedRequirement(nil), recipe.TypedRequirements...)
+	for index := range recipe.TypedRequirements {
+		recipe.TypedRequirements[index].Payload = append([]byte(nil), recipe.TypedRequirements[index].Payload...)
+	}
 	return recipe
 }
 

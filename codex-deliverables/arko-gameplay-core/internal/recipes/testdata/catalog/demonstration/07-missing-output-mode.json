@@ -1,0 +1,14 @@
+{
+  "category": "demonstration",
+  "recipe": {
+    "recipe_id": "demo:no-output-mode",
+    "version": 1,
+    "name": "DEMONSTRAÇÃO - missing output mode",
+    "material_selectors": [
+      {"item_id": "demo:ore", "quantity": 1}
+    ],
+    "product": {"item_id": "demo:alloy", "quantity": 1},
+    "active": true,
+    "demo_only": true
+  }
+}
