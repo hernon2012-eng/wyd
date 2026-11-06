@@ -80,3 +80,4 @@
 - O loader agora diagnostica por arquivo duplicatas da mesma dupla ID+versão no reload, mesmo com conteúdo idêntico, mantendo apenas primeira candidata válida em ordem estável. Fixture e teste regressivo adicionados.
 - Mantida compatibilidade de receitas legadas v1: validação core permite modo vazio nos dados existentes; o loader de definições v2 exige explicitamente um dos modos.
 - Verificação follow-up: `go test -count=1 ./...`, `go test -race -count=1 ./...`, `go vet ./...`, `go build ./...`, `python tests/validate_contracts.py` (7 schemas e 7 contratos/exemplos), `gofmt` e `git diff --check` passaram. Sem commit/push; sem acesso a banco.
+- Commit de implementação local: `982f39272d0d92d7ea9cc21703e26f9954305533`. O SHA remoto ainda precisa ser confirmado após publicação normal da branch isolada.
