@@ -16,5 +16,5 @@
 
 - PostgreSQL must be a dedicated database named `arko_admin`; migrations must be applied explicitly by an operator. The service refuses other database names and performs no automatic migration.
 - Current local validation passed against disposable PostgreSQL 16, including race tests and schema/example validation.
-- The implementation and report commits are published; current HEAD is `2b3b07aa680aa40bddac123437d7bd96e5b715e0`. CI passed for implementation SHA `ba1f521946eb566df61303d4c49ffa6acf1be540` and subsequent report checkpoints, including current HEAD.
+- The implementation and report commits are published; validated report HEAD is `e1b8830959cbd8c8d58e18d7eb8c31b7029330c0`. CI passed for implementation SHA `ba1f521946eb566df61303d4c49ffa6acf1be540` and subsequent report checkpoints, including `e1b8830`.
 - No independent external security audit has been performed. Production use requires review of authorization policy, secrets/credential recovery, TLS boundary, and any future data integration.

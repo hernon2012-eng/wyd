@@ -31,4 +31,5 @@ The branch SHA was verified remotely as `7523a82a96f801d2722fd373a0cb69af3972db6
 ## Pending
 
 - Obtain official role/capability, audit visibility, account-data, and GM-command specifications before enabling any non-demo access or action.
-- The user approved choosing the order; NPCs, services, and multi-character contract/catalog foundations were then implemented in that sequence on separate branches.
+- The user approved choosing the order; NPCs, services, and multi-character contract/catalog foundations were implemented in that sequence on separate branches.
+- Reports updated to reflect that sequence; report commit `e1b8830959cbd8c8d58e18d7eb8c31b7029330c0` passed GitHub Actions run `42133749687`.
