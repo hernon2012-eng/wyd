@@ -43,3 +43,14 @@ The requested branch currently has HEAD `3907b862a5f76af85e40a78facbfe58686032f5
 ## Evidence discipline
 
 Use the terms **implemented**, **tested**, **published**, **integrated**, **demonstrated**, and **pending** separately. A remote ref, passing workflow, proposal schema, or synthetic example does not by itself establish integration with WYD.
+
+## Post-audit updates
+
+The following refs were published after the original inventory snapshot; they supplement rather than rewrite the verified-ref table above:
+
+| Branch | Remote HEAD | Evidence |
+|---|---|---|
+| `codex/arko-integration-readiness-20261106` | `3ffee2237ae92553227c422ee41822360e90721d` | CI run [42140678882](https://github.com/hernon2012-eng/wyd/actions/runs/42140678882) passed, including Windows PowerShell manifest tests and JSON validator tests. |
+| `codex/arko-recipes-v2-20261106` | `7c201921a40b9c318f62c049ab93692b11b5e986` | P07 code is in `982f392`; package CI runs [42140894829](https://github.com/hernon2012-eng/wyd/actions/runs/42140894829) and [42140894804](https://github.com/hernon2012-eng/wyd/actions/runs/42140894804) passed at `d0fc252`. CI for the docs-only HEAD `7c20192` must be checked before using it as current validation evidence. |
+
+These are separate branches; no merge or real WYD integration is implied.

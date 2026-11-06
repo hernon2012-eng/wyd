@@ -55,7 +55,7 @@ From the repository root, run the relevant package block:
 
 P03 workflow additionally runs fuzz smoke and a full suite against an isolated PostgreSQL service. The P02/P03 package's PostgreSQL test DSN must target a disposable ARKO test service only.
 
-The P04/NPC/service/P05/P06 workflows are package-specific (`.github/workflows/arko-npc-dynamic.yml`, `arko-services.yml`, `arko-gm-admin.yml`, `arko-multichar-contract.yml`, plus the package workflows listed in the respective refs). Consult the workflow at that exact ref before replaying commands; do not infer a workflow's exact matrix from another branch. PowerShell is unavailable on the Linux audit host; any PowerShell-only tooling was not executed.
+The P04/NPC/service/P05/P06 workflows are package-specific (`.github/workflows/arko-npc-dynamic.yml`, `arko-services.yml`, `arko-gm-admin.yml`, `arko-multichar-contract.yml`, plus the package workflows listed in the respective refs). Consult the workflow at that exact ref before replaying commands; do not infer a workflow's exact matrix from another branch. PowerShell is unavailable on the Linux audit host, so the manifest test was not run locally; its synthetic Windows PowerShell test passed in CI run `42140678882`.
 
 ## Existing documentation contradictions to resolve
 

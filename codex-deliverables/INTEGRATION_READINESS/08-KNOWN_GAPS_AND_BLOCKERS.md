@@ -20,15 +20,15 @@
 - P05 uses a synthetic directory and preview-only command interface; no official capability matrix exists.
 - P06 loads/validates snapshots; its schema bounds do not become runtime policy.
 - Services is a read-only registry; NPC/service metadata does not execute game behavior.
-- P07–P12 implementation packages are absent from the audited refs; P01 contracts and P02/P03 crafting primitives do not satisfy that work.
+- P07–P12 were absent at the original audited refs. P07 now exists on the separate `codex/arko-recipes-v2-20261106` branch; P08–P12 remain pending. P07 does not establish official recipes, configured server policies, or WYD integration. P01 contracts and P02/P03 crafting primitives do not satisfy the remaining package work.
 
 ## Documentation and repository hygiene
 
-- Resolve the P03 README’s stale CI-pending statement against successful run `42124212922`.
+- Resolve the P03 branch README’s stale CI-pending statement against its successful PostgreSQL CI; the separate P07 branch README now distinguishes that earlier CI evidence from P07 validation.
 - Reconcile older NPC handoff statements with the P04 continuation at `dd4d948`; keep the two branches’ scopes distinct.
 - Refresh the P05 WORKLOG head/run references to reflect the verified P05 ref and run `42133943633`, while retaining historical checkpoints as history.
 - Do not treat old local branch refs at `dd592f4` as substitutes for the verified remote commits.
-- PowerShell tooling was not run because PowerShell is unavailable on this Linux host. No PowerShell changes are part of this deliverable.
+- The PowerShell manifest could not be run locally because PowerShell is unavailable on this Linux host. Its synthetic Windows PowerShell test did pass in CI run [42140678882](https://github.com/hernon2012-eng/wyd/actions/runs/42140678882); this is tool validation, not an inventory of original WYD assets.
 
 ## Stop conditions
 
